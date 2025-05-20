@@ -1,0 +1,29 @@
+{
+  "name": "kakarot-extensions0.8",
+  "version": "0.0.1",
+  "repositoryName": "Kakarot Extensions",
+  "description": "Kakarot Extensions",
+  "main": "index.js",
+  "scripts": {
+    "bundle": "npx paperback bundle",
+    "serve": "npx paperback serve",
+    "test": "npx paperback test",
+    "nodemon": "nodemon"
+  },
+  "author": "Karrot",
+  "license": "GPL-3.0-or-later",
+  "devDependencies": {
+    "@tsconfig/recommended": "^1.0.1",
+    "@typescript-eslint/eslint-plugin": "^5.1.0",
+    "@typescript-eslint/parser": "^5.57.1",
+    "eslint": "^7.27.0",
+    "eslint-plugin-modules-newline": "^0.0.6",
+    "typescript": "^4.9.5"
+  },
+  "dependencies": {
+    "@paperback/toolchain": "^0.8.7",
+    "@paperback/types": "^0.8.7",
+    "cheerio": "^1.0.0",
+    "html-entities": "^2.5.2"
+  }
+}
