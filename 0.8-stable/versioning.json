@@ -1,0 +1,1 @@
+{"buildTime":"2025-05-20T17:21:29.018Z","sources":[{"id":"BatCave","name":"BatCave","author":"Karrot","desc":"Extension that pulls manga from https://batcave.biz","contentRating":"MATURE","version":"0.0.1","icon":"icon.png","tags":[],"websiteBaseURL":"https://batcave.biz","intents":5}],"builtWith":{"toolchain":"0.8.7","types":"0.8.7"}}
