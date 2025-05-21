@@ -15000,7 +15000,7 @@ var _Sources = (() => {
   // src/BatCave/BatCave.ts
   var DOMAIN2 = "https://batcave.biz";
   var BatCaveInfo = {
-    version: "0.0.2",
+    version: "0.0.3",
     name: "BatCave",
     description: `Extension that pulls manga from ${DOMAIN2}`,
     author: "Karrot",
@@ -15015,7 +15015,6 @@ var _Sources = (() => {
       this.requestManager = App.createRequestManager({
         requestsPerSecond: 5,
         requestTimeout: 1e4,
-        // 10 seconds
         interceptor: {
           interceptRequest: async (request) => {
             request.headers = {
@@ -15030,11 +15029,12 @@ var _Sources = (() => {
                 "x-requested-with": "com.batcave.android"
               }
             };
+            request.url = request.url.replace(/^http:/, "https:");
             return request;
           },
           interceptResponse: async (response) => {
-            if (response.status === 403) {
-              throw new Error("403 Forbidden: Access Denied");
+            if (response.headers.location) {
+              response.headers.location = response.headers.location.replace(/^http:/, "https:");
             }
             return response;
           }
@@ -15115,19 +15115,15 @@ var _Sources = (() => {
           const image = rawImage.startsWith("/") ? `https://batcave.biz${rawImage}` : rawImage;
           const rawMangaId = infoLink.attr("href");
           const mangaId = rawMangaId?.replace(/^.*?\/([^/]+)$/, "$1").replace(/\.html$/, "").trim();
+          const latestChapterText = unit.find(".readed__info li:last-child span").parent().text().trim();
+          const latestChapter = latestChapterText.replace(/Last issue:/, "").trim();
           if (!mangaId || newCollectedIds.includes(mangaId)) return;
           newCollectedIds.push(mangaId);
-          results.push(App.createSourceManga({
-            id: mangaId,
-            mangaInfo: App.createMangaInfo({
-              titles: [title],
-              image,
-              desc: "",
-              status: "UNKNOWN",
-              rating: 0,
-              tags: [],
-              hentai: false
-            })
+          results.push(App.createPartialSourceManga({
+            mangaId,
+            image,
+            title,
+            subtitle: latestChapter
           }));
         });
       } else {
@@ -15139,34 +15135,25 @@ var _Sources = (() => {
           const image = rawImage.startsWith("/") ? `https://batcave.biz${rawImage}` : rawImage;
           const rawMangaId = infoLink.attr("href");
           const mangaId = rawMangaId?.replace(/^.*?\/([^/]+)$/, "$1").replace(/\.html$/, "").trim();
+          const latestChapterText = unit.find(".readed__info li:last-child").text().trim();
+          const latestChapter = latestChapterText.replace("Last issue:", "").trim();
           if (!mangaId || newCollectedIds.includes(mangaId)) return;
           newCollectedIds.push(mangaId);
-          results.push(App.createSourceManga({
-            id: mangaId,
-            mangaInfo: App.createMangaInfo({
-              titles: [title],
-              image,
-              desc: "",
-              status: "UNKNOWN",
-              rating: 0,
-              tags: [],
-              hentai: false
-            })
+          results.push(App.createPartialSourceManga({
+            mangaId,
+            image,
+            title,
+            subtitle: latestChapter
           }));
         });
       }
-      const partialResults = results.map((manga) => ({
-        mangaId: manga.id,
-        title: manga.mangaInfo.titles[0] ?? "Unknown Title",
-        image: manga.mangaInfo.image
-      }));
       const currentPage = parseInt($2(".pagination__pages > span").first().text()) || page;
       const hasNextPage = $2(".pagination__pages > a").filter((_, el) => {
         const pageNum = parseInt($2(el).text());
         return !isNaN(pageNum) && pageNum > currentPage;
       }).length > 0 || $2(".pagination__pages > a:last-child").text().includes("\xBB");
       return App.createPagedResults({
-        results: partialResults,
+        results,
         metadata: hasNextPage ? {
           page: page + 1,
           collectedIds: newCollectedIds
