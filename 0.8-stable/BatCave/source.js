@@ -14924,7 +14924,7 @@ var _Sources = (() => {
     const newComicsSection = App.createHomeSection({
       id: "newComics",
       title: "New Comics",
-      containsMoreItems: false,
+      containsMoreItems: true,
       type: import_types2.HomeSectionType.singleRowNormal
     });
     const popularArray = [];
@@ -15000,7 +15000,7 @@ var _Sources = (() => {
   // src/BatCave/BatCave.ts
   var DOMAIN2 = "https://batcave.biz";
   var BatCaveInfo = {
-    version: "0.0.3",
+    version: "0.0.4",
     name: "BatCave",
     description: `Extension that pulls manga from ${DOMAIN2}`,
     author: "Karrot",
@@ -15163,7 +15163,17 @@ var _Sources = (() => {
     async getViewMoreItems(homepageSectionId, metadata) {
       const page = metadata?.page ?? 1;
       const collectedIds = metadata?.collectedIds ?? [];
-      const url = page > 1 ? `${DOMAIN2}/comix/page/${page}/` : `${DOMAIN2}/comix/`;
+      let url;
+      switch (homepageSectionId) {
+        case "catalogue":
+          url = page > 1 ? `${DOMAIN2}/comix/page/${page}/` : `${DOMAIN2}/comix/`;
+          break;
+        case "newComics":
+          url = page > 1 ? `${DOMAIN2}/page/${page}/` : `${DOMAIN2}`;
+          break;
+        default:
+          throw new Error(`Unsupported section ID: ${homepageSectionId}`);
+      }
       const request = App.createRequest({
         url,
         method: "GET"
@@ -15172,31 +15182,57 @@ var _Sources = (() => {
       const $2 = load(response.data);
       const results = [];
       const newCollectedIds = [...collectedIds];
-      $2("#dle-content .readed").each((_, element) => {
-        const unit = $2(element);
-        const infoLink = unit.find(".readed__title a");
-        const title = infoLink.text().trim();
-        const rawImage = unit.find("img").attr("data-src") || "";
-        const image = rawImage.startsWith("/") ? `https://batcave.biz${rawImage}` : rawImage;
-        const rawMangaId = infoLink.attr("href");
-        const mangaId = rawMangaId?.replace(/^.*?\/([^/]+)$/, "$1").replace(/\.html$/, "").trim();
-        const latestChapterText = unit.find(".readed__info li:last-child").text().trim();
-        const latestChapter = latestChapterText.replace("Last issue:", "").trim();
-        if (title && mangaId && !newCollectedIds.includes(mangaId)) {
-          newCollectedIds.push(mangaId);
-          results.push(App.createPartialSourceManga({
-            mangaId,
-            image,
-            title,
-            subtitle: latestChapter
-          }));
-        }
-      });
-      const currentPage = parseInt($2(".pagination__pages > span").first().text()) || page;
-      const hasNextPage = $2(".pagination__pages > a").filter((_, el) => {
-        const pageNum = parseInt($2(el).text());
-        return !isNaN(pageNum) && pageNum > currentPage;
-      }).length > 0 || $2(".pagination__pages > a:last-child").text().includes("\xBB");
+      if (homepageSectionId === "catalogue") {
+        $2("#dle-content .readed").each((_, element) => {
+          const unit = $2(element);
+          const infoLink = unit.find(".readed__title a");
+          const title = infoLink.text().trim();
+          const rawImage = unit.find("img").attr("data-src") || "";
+          const image = rawImage.startsWith("/") ? `https://batcave.biz${rawImage}` : rawImage;
+          const rawMangaId = infoLink.attr("href");
+          const mangaId = rawMangaId?.replace(/^.*?\/([^/]+)$/, "$1").replace(/\.html$/, "").trim();
+          const latestChapterText = unit.find(".readed__info li:last-child").text().trim();
+          const latestChapter = latestChapterText.replace("Last issue:", "").trim();
+          if (title && mangaId && !newCollectedIds.includes(mangaId)) {
+            newCollectedIds.push(mangaId);
+            results.push(App.createPartialSourceManga({
+              mangaId,
+              image,
+              title,
+              subtitle: latestChapter
+            }));
+          }
+        });
+      } else if (homepageSectionId === "newComics") {
+        $2(".sect--latest .latest.grid-item, .latest-chapter").each((_, element) => {
+          const unit = $2(element);
+          const title = unit.find(".latest__title, .latest-chapter__title").clone().children().remove().end().text().trim();
+          const rawImage = unit.find(".latest__img img, .latest-chapter__img img").attr("src") || "";
+          const image = rawImage.startsWith("/") ? `https://batcave.biz${rawImage}` : rawImage;
+          const rawMangaId = unit.find(".latest__title, .latest-chapter__title").closest("a").attr("href");
+          const mangaId = rawMangaId?.replace(/^.*?\/([^/]+)$/, "$1").replace(/\.html$/, "").trim();
+          const latestChapter = unit.find(".latest__chapter a, .latest-chapter__chapter a").text().trim();
+          if (title && mangaId && !newCollectedIds.includes(mangaId)) {
+            newCollectedIds.push(mangaId);
+            results.push(App.createPartialSourceManga({
+              mangaId,
+              image,
+              title,
+              subtitle: latestChapter
+            }));
+          }
+        });
+      }
+      let hasNextPage = false;
+      if (homepageSectionId === "newComics") {
+        hasNextPage = $2(".sect--latest .more-comics, .pagination a:contains('\xBB'), .pagination__btn-loader a").length > 0;
+      } else {
+        const currentPage = parseInt($2(".pagination__pages > span").first().text()) || page;
+        hasNextPage = $2(".pagination__pages > a").filter((_, el) => {
+          const pageNum = parseInt($2(el).text());
+          return !isNaN(pageNum) && pageNum > currentPage;
+        }).length > 0 || $2(".pagination__pages > a:last-child").text().includes("\xBB");
+      }
       metadata = hasNextPage ? {
         page: page + 1,
         collectedIds: newCollectedIds
@@ -15272,6 +15308,9 @@ var _Sources = (() => {
         mangaId,
         pages
       });
+    }
+    getMangaShareUrl(mangaId) {
+      return `${DOMAIN2}/${mangaId}.html`;
     }
   };
   return __toCommonJS(BatCave_exports);
