@@ -27,7 +27,7 @@ import {
 const DOMAIN = "https://batcave.biz";
 
 export const BatCaveInfo: SourceInfo = {
-    version: '0.0.2',
+    version: '0.0.3',
     name: 'BatCave',
     description: `Extension that pulls manga from ${DOMAIN}`,
     author: 'Karrot',
@@ -49,7 +49,7 @@ export class BatCave
 {
     requestManager = App.createRequestManager({
         requestsPerSecond: 5,
-        requestTimeout: 10000, // 10 seconds
+        requestTimeout: 10000,
         interceptor: {
             interceptRequest: async (request: Request): Promise<Request> => {
                 request.headers = {
@@ -64,14 +64,16 @@ export class BatCave
                     },
                 };
 
+                request.url = request.url.replace(/^http:/, 'https:')
+
                 return request;
             },
 
             interceptResponse: async (response: Response): Promise<Response> => {
-                if (response.status === 403) {
-                    throw new Error("403 Forbidden: Access Denied");
+                if (response.headers.location) {
+                    response.headers.location = response.headers.location.replace(/^http:/, 'https:')
                 }
-                return response;
+                return response
             }
         }
     })
@@ -169,7 +171,7 @@ export class BatCave
         const response = await this.requestManager.schedule(request, 1)
         const $ = cheerio.load(response.data as string)
 
-        const results: SourceManga[] = []
+        const results: PartialSourceManga[] = []
         const newCollectedIds = [...collectedIds];
         
         if (searchTerm.trim() === "") {
@@ -187,20 +189,23 @@ export class BatCave
                     .replace(/\.html$/, "")
                     .trim();
 
+                const latestChapterText = unit
+                    .find(".readed__info li:last-child span")
+                    .parent()
+                    .text()
+                    .trim();
+                const latestChapter = latestChapterText
+                    .replace(/Last issue:/, "")
+                    .trim();
+                
                 if (!mangaId || newCollectedIds.includes(mangaId)) return;
                 newCollectedIds.push(mangaId);
 
-                results.push(App.createSourceManga({
-                    id: mangaId,
-                    mangaInfo: App.createMangaInfo({
-                        titles: [title],
-                        image: image,
-                        desc: "",
-                        status: "UNKNOWN",
-                        rating: 0,
-                        tags: [],
-                        hentai: false,
-                    })
+                results.push(App.createPartialSourceManga({
+                    mangaId: mangaId,
+                    image: image,
+                    title: title,
+                    subtitle: latestChapter
                 }));
             });
         } else {
@@ -218,29 +223,25 @@ export class BatCave
                 .replace(/\.html$/, "")
                 .trim();
                 
+                const latestChapterText = unit
+                    .find(".readed__info li:last-child")
+                    .text()
+                    .trim();
+                const latestChapter = latestChapterText
+                    .replace("Last issue:", "")
+                    .trim();
+
                 if (!mangaId || newCollectedIds.includes(mangaId)) return;
                 newCollectedIds.push(mangaId);
 
-                results.push(App.createSourceManga({
-                    id: mangaId,
-                    mangaInfo: App.createMangaInfo({
-                        titles: [title],
-                        image: image,
-                        desc: "",
-                        status: "UNKNOWN",
-                        rating: 0,
-                        tags: [],
-                        hentai: false
-                    })
+                results.push(App.createPartialSourceManga({
+                    mangaId: mangaId,
+                    image: image,
+                    title: title,
+                    subtitle: latestChapter
                 }));
             });
         }
-
-        const partialResults = results.map(manga => ({
-            mangaId: manga.id,
-            title: manga.mangaInfo.titles[0] ?? 'Unknown Title',
-            image: manga.mangaInfo.image
-        }));
 
         const currentPage =
             parseInt($(".pagination__pages > span").first().text()) || page;
@@ -251,7 +252,7 @@ export class BatCave
             }).length > 0 || $(".pagination__pages > a:last-child").text().includes("»");
 
         return App.createPagedResults({
-            results: partialResults,
+            results: results,
             metadata: hasNextPage ? {
                 page: page + 1,
                 collectedIds: newCollectedIds
