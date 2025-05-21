@@ -15,6 +15,7 @@ import {
     Chapter,
     HomeSection,
     TagSection,
+    PartialSourceManga,
 } from '@paperback/types'
 
 import * as cheerio from 'cheerio'
@@ -26,7 +27,7 @@ import {
 const DOMAIN = "https://batcave.biz";
 
 export const BatCaveInfo: SourceInfo = {
-    version: '0.0.1',
+    version: '0.0.2',
     name: 'BatCave',
     description: `Extension that pulls manga from ${DOMAIN}`,
     author: 'Karrot',
@@ -242,28 +243,84 @@ export class BatCave
         }));
 
         const currentPage =
-            parseInt($(".pagination__pages > span").first().text()) || 1;
-        const hasNextPage =
-            $(".pagination__pages > a").filter((_, el) => {
-                const pageNum = parseInt($(el).text());
-                return !isNaN(pageNum) && pageNum > currentPage;
-            }).length > 0;
-
-        console.log("hasNextPage", hasNextPage);
+            parseInt($(".pagination__pages > span").first().text()) || page;
+        const hasNextPage = $(".pagination__pages > a")
+            .filter((_, el) => {
+            const pageNum = parseInt($(el).text());
+            return !isNaN(pageNum) && pageNum > currentPage;
+            }).length > 0 || $(".pagination__pages > a:last-child").text().includes("»");
 
         return App.createPagedResults({
             results: partialResults,
-            metadata: {
-                page: hasNextPage ? page + 1 : undefined,
-                collectedIds: newCollectedIds,
-                ...(metadata as object || {})
-            }
+            metadata: hasNextPage ? {
+                page: page + 1,
+                collectedIds: newCollectedIds
+            } : undefined
         });
     }
 
     async getViewMoreItems(homepageSectionId: string, metadata: any): Promise<PagedResults> {
+        const page: number = metadata?.page ?? 1;
+        const collectedIds: string[] = metadata?.collectedIds ?? [];
+
+        const url = page > 1 ? `${DOMAIN}/comix/page/${page}/` : `${DOMAIN}/comix/`;
+        const request = App.createRequest({
+            url: url,
+            method: 'GET',
+        })
+
+        const response = await this.requestManager.schedule(request, 1)
+        const $ = cheerio.load(response.data as string)
+
+        const results: PartialSourceManga[] = []
+        const newCollectedIds = [...collectedIds]
+
+        $("#dle-content .readed").each((_, element) => {
+            const unit = $(element)
+            const infoLink = unit.find(".readed__title a")
+            const title = infoLink.text().trim()
+            const rawImage = unit.find("img").attr("data-src") || ""
+            const image = rawImage.startsWith("/")
+                ? `https://batcave.biz${rawImage}`
+                : rawImage
+            const rawMangaId = infoLink.attr("href")
+            const mangaId = rawMangaId
+                ?.replace(/^.*?\/([^/]+)$/, "$1")
+                .replace(/\.html$/, "")
+                .trim()
+            const latestChapterText = unit
+                .find(".readed__info li:last-child")
+                .text()
+                .trim()
+            const latestChapter = latestChapterText
+                .replace("Last issue:", "")
+                .trim()
+
+            if (title && mangaId && !newCollectedIds.includes(mangaId)) {
+                newCollectedIds.push(mangaId)
+                results.push(App.createPartialSourceManga({
+                    mangaId: mangaId,
+                    image: image,
+                    title: title,
+                    subtitle: latestChapter
+                }))
+            }
+        })
+
+        const currentPage = parseInt($(".pagination__pages > span").first().text()) || page
+        const hasNextPage = $(".pagination__pages > a")
+            .filter((_, el) => {
+                const pageNum = parseInt($(el).text())
+                return !isNaN(pageNum) && pageNum > currentPage
+            }).length > 0 || $(".pagination__pages > a:last-child").text().includes("»")
+
+        metadata = hasNextPage ? {
+            page: page + 1,
+            collectedIds: newCollectedIds
+        } : undefined
+
         return App.createPagedResults({
-            results: [],
+            results: results,
             metadata: metadata
         });
     }
