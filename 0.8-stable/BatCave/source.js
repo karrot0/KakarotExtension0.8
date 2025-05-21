@@ -14918,7 +14918,7 @@ var _Sources = (() => {
     const catalogueSection = App.createHomeSection({
       id: "catalogue",
       title: "Catalogue",
-      containsMoreItems: false,
+      containsMoreItems: true,
       type: import_types2.HomeSectionType.singleRowNormal
     });
     const newComicsSection = App.createHomeSection({
@@ -15000,7 +15000,7 @@ var _Sources = (() => {
   // src/BatCave/BatCave.ts
   var DOMAIN2 = "https://batcave.biz";
   var BatCaveInfo = {
-    version: "0.0.1",
+    version: "0.0.2",
     name: "BatCave",
     description: `Extension that pulls manga from ${DOMAIN2}`,
     author: "Karrot",
@@ -15160,24 +15160,62 @@ var _Sources = (() => {
         title: manga.mangaInfo.titles[0] ?? "Unknown Title",
         image: manga.mangaInfo.image
       }));
-      const currentPage = parseInt($2(".pagination__pages > span").first().text()) || 1;
+      const currentPage = parseInt($2(".pagination__pages > span").first().text()) || page;
       const hasNextPage = $2(".pagination__pages > a").filter((_, el) => {
         const pageNum = parseInt($2(el).text());
         return !isNaN(pageNum) && pageNum > currentPage;
-      }).length > 0;
-      console.log("hasNextPage", hasNextPage);
+      }).length > 0 || $2(".pagination__pages > a:last-child").text().includes("\xBB");
       return App.createPagedResults({
         results: partialResults,
-        metadata: {
-          page: hasNextPage ? page + 1 : void 0,
-          collectedIds: newCollectedIds,
-          ...metadata || {}
-        }
+        metadata: hasNextPage ? {
+          page: page + 1,
+          collectedIds: newCollectedIds
+        } : void 0
       });
     }
     async getViewMoreItems(homepageSectionId, metadata) {
+      const page = metadata?.page ?? 1;
+      const collectedIds = metadata?.collectedIds ?? [];
+      const url = page > 1 ? `${DOMAIN2}/comix/page/${page}/` : `${DOMAIN2}/comix/`;
+      const request = App.createRequest({
+        url,
+        method: "GET"
+      });
+      const response = await this.requestManager.schedule(request, 1);
+      const $2 = load(response.data);
+      const results = [];
+      const newCollectedIds = [...collectedIds];
+      $2("#dle-content .readed").each((_, element) => {
+        const unit = $2(element);
+        const infoLink = unit.find(".readed__title a");
+        const title = infoLink.text().trim();
+        const rawImage = unit.find("img").attr("data-src") || "";
+        const image = rawImage.startsWith("/") ? `https://batcave.biz${rawImage}` : rawImage;
+        const rawMangaId = infoLink.attr("href");
+        const mangaId = rawMangaId?.replace(/^.*?\/([^/]+)$/, "$1").replace(/\.html$/, "").trim();
+        const latestChapterText = unit.find(".readed__info li:last-child").text().trim();
+        const latestChapter = latestChapterText.replace("Last issue:", "").trim();
+        if (title && mangaId && !newCollectedIds.includes(mangaId)) {
+          newCollectedIds.push(mangaId);
+          results.push(App.createPartialSourceManga({
+            mangaId,
+            image,
+            title,
+            subtitle: latestChapter
+          }));
+        }
+      });
+      const currentPage = parseInt($2(".pagination__pages > span").first().text()) || page;
+      const hasNextPage = $2(".pagination__pages > a").filter((_, el) => {
+        const pageNum = parseInt($2(el).text());
+        return !isNaN(pageNum) && pageNum > currentPage;
+      }).length > 0 || $2(".pagination__pages > a:last-child").text().includes("\xBB");
+      metadata = hasNextPage ? {
+        page: page + 1,
+        collectedIds: newCollectedIds
+      } : void 0;
       return App.createPagedResults({
-        results: [],
+        results,
         metadata
       });
     }
