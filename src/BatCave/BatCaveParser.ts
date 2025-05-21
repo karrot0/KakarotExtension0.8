@@ -53,7 +53,7 @@ export const parseHomeSections = async (
     const newComicsSection = App.createHomeSection({
         id: 'newComics',
         title: 'New Comics',
-        containsMoreItems: false,
+        containsMoreItems: true,
         type: HomeSectionType.singleRowNormal,
     })
 
