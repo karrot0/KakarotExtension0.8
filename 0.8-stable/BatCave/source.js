@@ -14935,7 +14935,7 @@ var _Sources = (() => {
       const rawImage = (unit.find(".poster__img img").attr("data-src") || "").trim();
       const image = rawImage.startsWith("/") ? `https://batcave.biz${rawImage}` : rawImage;
       const rawMangaId = unit.attr("href");
-      const mangaId = rawMangaId?.replace(/^.*?\/([^/]+)$/, "$1").replace(/\.html$/, "").trim();
+      const mangaId = rawMangaId?.replace(/^https?:\/\/batcave\.biz\//, "").replace(/\.html$/, "").trim();
       const rating = unit.find(".poster__label--rate").text().trim();
       if (title && mangaId && !collectedIds.includes(mangaId)) {
         collectedIds.push(mangaId);
@@ -14958,7 +14958,7 @@ var _Sources = (() => {
       const rawImage = unit.find("img").attr("data-src") || "";
       const image = rawImage.startsWith("/") ? `https://batcave.biz${rawImage}` : rawImage;
       const rawMangaId = infoLink.attr("href");
-      const mangaId = rawMangaId?.replace(/^.*?\/([^/]+)$/, "$1").replace(/\.html$/, "").trim();
+      const mangaId = rawMangaId?.replace(/^https?:\/\/batcave\.biz\//, "").replace(/\.html$/, "").trim();
       const latestChapterText = unit.find(".readed__info li:last-child").text().trim();
       const latestChapter = latestChapterText.replace("Last issue:", "").trim();
       if (title && mangaId && !catalogueIds.includes(mangaId)) {
@@ -14981,7 +14981,7 @@ var _Sources = (() => {
       const rawImage = unit.find(".latest__img img").attr("src") || "";
       const image = rawImage.startsWith("/") ? `https://batcave.biz${rawImage}` : rawImage;
       const rawMangaId = unit.find(".latest__title").closest("a").attr("href");
-      const mangaId = rawMangaId?.replace(/^.*?\/([^/]+)$/, "$1").replace(/\.html$/, "").trim();
+      const mangaId = rawMangaId?.replace(/^https?:\/\/batcave\.biz\//, "").replace(/\.html$/, "").trim();
       const latestChapter = unit.find(".latest__chapter a").text().trim();
       if (title && mangaId && !newComicsIds.includes(mangaId)) {
         newComicsIds.push(mangaId);
@@ -15000,7 +15000,7 @@ var _Sources = (() => {
   // src/BatCave/BatCave.ts
   var DOMAIN2 = "https://batcave.biz";
   var BatCaveInfo = {
-    version: "0.0.4",
+    version: "0.0.5",
     name: "BatCave",
     description: `Extension that pulls manga from ${DOMAIN2}`,
     author: "Karrot",
@@ -15114,7 +15114,7 @@ var _Sources = (() => {
           const rawImage = unit.find("img").attr("data-src") || "";
           const image = rawImage.startsWith("/") ? `https://batcave.biz${rawImage}` : rawImage;
           const rawMangaId = infoLink.attr("href");
-          const mangaId = rawMangaId?.replace(/^.*?\/([^/]+)$/, "$1").replace(/\.html$/, "").trim();
+          const mangaId = rawMangaId?.replace(/^https?:\/\/batcave\.biz\//, "").replace(/\.html$/, "").trim();
           const latestChapterText = unit.find(".readed__info li:last-child span").parent().text().trim();
           const latestChapter = latestChapterText.replace(/Last issue:/, "").trim();
           if (!mangaId || newCollectedIds.includes(mangaId)) return;
@@ -15134,7 +15134,7 @@ var _Sources = (() => {
           const rawImage = unit.find("img").attr("data-src") || "";
           const image = rawImage.startsWith("/") ? `https://batcave.biz${rawImage}` : rawImage;
           const rawMangaId = infoLink.attr("href");
-          const mangaId = rawMangaId?.replace(/^.*?\/([^/]+)$/, "$1").replace(/\.html$/, "").trim();
+          const mangaId = rawMangaId?.replace(/^https?:\/\/batcave\.biz\//, "").replace(/\.html$/, "").trim();
           const latestChapterText = unit.find(".readed__info li:last-child").text().trim();
           const latestChapter = latestChapterText.replace("Last issue:", "").trim();
           if (!mangaId || newCollectedIds.includes(mangaId)) return;
