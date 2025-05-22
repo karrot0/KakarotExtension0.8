@@ -71,7 +71,7 @@ export const parseHomeSections = async (
             : rawImage;
         const rawMangaId = unit.attr("href");
         const mangaId = rawMangaId
-            ?.replace(/^.*?\/([^/]+)$/, "$1")
+            ?.replace(/^https?:\/\/batcave\.biz\//, "")
             .replace(/\.html$/, "")
             .trim();
         const rating = unit.find(".poster__label--rate").text().trim();
@@ -103,7 +103,7 @@ export const parseHomeSections = async (
             : rawImage;
         const rawMangaId = infoLink.attr("href");
         const mangaId = rawMangaId
-            ?.replace(/^.*?\/([^/]+)$/, "$1")
+            ?.replace(/^https?:\/\/batcave\.biz\//, "")
             .replace(/\.html$/, "")
             .trim();
         const latestChapterText = unit
@@ -150,7 +150,7 @@ export const parseHomeSections = async (
             .closest("a")
             .attr("href");
         const mangaId = rawMangaId
-            ?.replace(/^.*?\/([^/]+)$/, "$1")
+            ?.replace(/^https?:\/\/batcave\.biz\//, "")
             .replace(/\.html$/, "")
             .trim();
         const latestChapter = unit.find(".latest__chapter a").text().trim();

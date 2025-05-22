@@ -27,7 +27,7 @@ import {
 const DOMAIN = "https://batcave.biz";
 
 export const BatCaveInfo: SourceInfo = {
-    version: '0.0.4',
+    version: '0.0.5',
     name: 'BatCave',
     description: `Extension that pulls manga from ${DOMAIN}`,
     author: 'Karrot',
@@ -185,8 +185,8 @@ export class BatCave
                     : rawImage;
                 const rawMangaId = infoLink.attr("href");
                 const mangaId = rawMangaId
-                    ?.replace(/^.*?\/([^/]+)$/, "$1")
-                    .replace(/\.html$/, "")
+                    ?.replace(/^https?:\/\/batcave\.biz\//, "") // Remove domain prefix if present
+                    .replace(/\.html$/, "") // Remove the ".html" extension
                     .trim();
 
                 const latestChapterText = unit
@@ -219,9 +219,9 @@ export class BatCave
                 : rawImage;
                 const rawMangaId = infoLink.attr("href");
                 const mangaId = rawMangaId
-                ?.replace(/^.*?\/([^/]+)$/, "$1")
-                .replace(/\.html$/, "")
-                .trim();
+                    ?.replace(/^https?:\/\/batcave\.biz\//, "")
+                    .replace(/\.html$/, "")
+                    .trim();
                 
                 const latestChapterText = unit
                     .find(".readed__info li:last-child")
