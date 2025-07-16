@@ -52,10 +52,16 @@ export class BatCave
         requestTimeout: 10000,
         interceptor: {
             interceptRequest: async (request: Request): Promise<Request> => {
+                // Set appropriate referer based on request URL domain
+                let referer = `https://batcave.biz`;
+                if (request.url.includes('readcomicsonline.ru')) {
+                    referer = `https://readcomicsonline.ru`;
+                }
+
                 request.headers = {
                     ...(request.headers ?? {}), ...{
                         origin: `https://batcave.biz`,
-                        referer: `https://batcave.biz`,
+                        referer: referer,
                         "user-agent": await this.requestManager.getDefaultUserAgent(),
                         accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
                         "accept-language": "en-US,en;q=0.5",
