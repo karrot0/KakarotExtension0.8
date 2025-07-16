@@ -52,10 +52,22 @@ export class ReadAllComics
         requestTimeout: 10000,
         interceptor: {
             interceptRequest: async (request: Request): Promise<Request> => {
+                // Check if this is an image request to readcomicsonline.ru
+                const isReadComicsOnlineImage = request.url.includes('readcomicsonline.ru');
+                
+                let origin = `https://readallcomics.com`;
+                let referer = `https://readallcomics.com`;
+                
+                // For readcomicsonline.ru image requests, use the same domain as referer
+                if (isReadComicsOnlineImage) {
+                    origin = `https://readcomicsonline.ru`;
+                    referer = `https://readcomicsonline.ru`;
+                }
+                
                 request.headers = {
                     ...(request.headers ?? {}), ...{
-                        origin: `https://readallcomics.com`,
-                        referer: `https://readallcomics.com`,
+                        origin: origin,
+                        referer: referer,
                         "user-agent": await this.requestManager.getDefaultUserAgent(),
                         accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
                         "accept-language": "en-US,en;q=0.5",
