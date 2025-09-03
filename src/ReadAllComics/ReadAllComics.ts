@@ -1,6 +1,7 @@
 import {
     ChapterProviding,
     ContentRating,
+    CloudflareBypassRequestProviding,
     HomePageSectionsProviding,
     MangaProviding,
     PagedResults,
@@ -36,7 +37,8 @@ export const ReadAllComicsInfo: SourceInfo = {
     websiteBaseURL: DOMAIN,
     intents:
         SourceIntents.MANGA_CHAPTERS |
-        SourceIntents.HOMEPAGE_SECTIONS,
+        SourceIntents.HOMEPAGE_SECTIONS |
+        SourceIntents.CLOUDFLARE_BYPASS_REQUIRED,
     sourceTags: []
 }
 
@@ -45,7 +47,8 @@ export class ReadAllComics
         ChapterProviding,
         HomePageSectionsProviding,
         MangaProviding,
-        SearchResultsProviding
+        SearchResultsProviding,
+        CloudflareBypassRequestProviding
 {
     requestManager = App.createRequestManager({
         requestsPerSecond: 5,
@@ -60,7 +63,6 @@ export class ReadAllComics
                         accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
                         "accept-language": "en-US,en;q=0.5",
                         "accept-encoding": "gzip, deflate, br",
-                        "x-requested-with": "com.batcave.android",
                     },
                 };
 
@@ -377,6 +379,18 @@ export class ReadAllComics
             mangaId: mangaId,
             pages: pages,
         })
+    }
+
+    async getCloudflareBypassRequestAsync(): Promise<Request> {
+        return App.createRequest({
+            url: DOMAIN,
+            method: 'GET',
+            headers: {
+                'referer': DOMAIN,
+                'origin': DOMAIN,
+                'user-agent': await this.requestManager.getDefaultUserAgent()
+            }
+        });
     }
 
     getMangaShareUrl(mangaId: string): string { return `${DOMAIN}/category/${mangaId}` }
