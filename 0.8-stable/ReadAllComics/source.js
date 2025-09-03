@@ -14944,7 +14944,7 @@ var _Sources = (() => {
     icon: "icon.png",
     contentRating: import_types3.ContentRating.MATURE,
     websiteBaseURL: DOMAIN2,
-    intents: import_types3.SourceIntents.MANGA_CHAPTERS | import_types3.SourceIntents.HOMEPAGE_SECTIONS,
+    intents: import_types3.SourceIntents.MANGA_CHAPTERS | import_types3.SourceIntents.HOMEPAGE_SECTIONS | import_types3.SourceIntents.CLOUDFLARE_BYPASS_REQUIRED,
     sourceTags: []
   };
   var ReadAllComics = class {
@@ -14962,8 +14962,7 @@ var _Sources = (() => {
                 "user-agent": await this.requestManager.getDefaultUserAgent(),
                 accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
                 "accept-language": "en-US,en;q=0.5",
-                "accept-encoding": "gzip, deflate, br",
-                "x-requested-with": "com.batcave.android"
+                "accept-encoding": "gzip, deflate, br"
               }
             };
             request.url = request.url.replace(/^http:/, "https:");
@@ -15206,6 +15205,17 @@ var _Sources = (() => {
         id: chapterId,
         mangaId,
         pages
+      });
+    }
+    async getCloudflareBypassRequestAsync() {
+      return App.createRequest({
+        url: DOMAIN2,
+        method: "GET",
+        headers: {
+          "referer": DOMAIN2,
+          "origin": DOMAIN2,
+          "user-agent": await this.requestManager.getDefaultUserAgent()
+        }
       });
     }
     getMangaShareUrl(mangaId) {
