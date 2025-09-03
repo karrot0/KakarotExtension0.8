@@ -28,7 +28,7 @@ import {
 const DOMAIN = "https://readallcomics.com";
 
 export const ReadAllComicsInfo: SourceInfo = {
-    version: '0.0.1',
+    version: '0.0.2',
     name: 'ReadAllComics',
     description: `Extension that pulls manga from ${DOMAIN}`,
     author: 'Karrot',
