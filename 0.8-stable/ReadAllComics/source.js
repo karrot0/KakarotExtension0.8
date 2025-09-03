@@ -14937,7 +14937,7 @@ var _Sources = (() => {
   // src/ReadAllComics/ReadAllComics.ts
   var DOMAIN2 = "https://readallcomics.com";
   var ReadAllComicsInfo = {
-    version: "0.0.1",
+    version: "0.0.2",
     name: "ReadAllComics",
     description: `Extension that pulls manga from ${DOMAIN2}`,
     author: "Karrot",
