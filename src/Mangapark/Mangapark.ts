@@ -27,7 +27,7 @@ import {
 const DOMAIN = "https://mangapark.io";
 
 export const MangaparkInfo: SourceInfo = {
-    version: '0.0.2',
+    version: '0.0.3',
     name: 'Mangapark',
     description: `Extension that pulls manga from ${DOMAIN}`,
     author: 'Karrot',
@@ -231,7 +231,7 @@ export class Mangapark
 
         let url: string;
         if (homepageSectionId === 'latest') {
-            url = `${DOMAIN}/search?page=${page}`;
+            url = `${DOMAIN}/search?sortby=field_update&page=${page}`;
         } else if (homepageSectionId === 'newReleases') {
             url = `${DOMAIN}/search?sortby=field_create&page=${page}`;
         } else {

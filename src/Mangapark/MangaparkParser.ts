@@ -17,18 +17,25 @@ export const parseHomeSections = async (
         method: 'GET',
     })
 
+    const latestRequest = App.createRequest({
+        url: `${DOMAIN}/search?sortby=field_update&page=1`,
+        method: 'GET',
+    })
+
     const newReleasesRequest = App.createRequest({
         url: `${DOMAIN}/search?sortby=field_create&page=1`,
         method: 'GET',
     })
 
-    const [response, newReleasesResponse] = await Promise.all([
+    const [response, latestResponse, newReleasesResponse] = await Promise.all([
         source.requestManager.schedule(request, 1),
+        source.requestManager.schedule(latestRequest, 1),
         source.requestManager.schedule(newReleasesRequest, 1)
     ])
 
-    const [$, $newReleases] = await Promise.all([
+    const [$, $latest, $newReleases] = await Promise.all([
         cheerio.load(response.data as string),
+        cheerio.load(latestResponse.data as string),
         cheerio.load(newReleasesResponse.data as string)
     ])
 
@@ -88,10 +95,10 @@ export const parseHomeSections = async (
 
     // For latest section
     const latestArray: PartialSourceManga[] = []
+    const latestIds: string[] = []
 
-    // Adapt selectors for latest - using search results format
-    $(".flex.border-b.border-b-base-200.pb-5").each((_, element) => {
-        const unit = $(element);
+    $latest(".flex.border-b.border-b-base-200.pb-5").each((_, element) => {
+        const unit = $latest(element);
         const titleLink = unit.find("h3 a");
         const title = titleLink.find("span").text().trim();
         const imageSrc = unit.find("img").attr("src") || "";
@@ -102,8 +109,8 @@ export const parseHomeSections = async (
         const latestChapterMatch = latestChapter.match(/Chapter (\d+)/);
         const subtitle = latestChapterMatch ? `Ch. ${latestChapterMatch[1]}` : undefined;
 
-        if (title && mangaId && !collectedIds.includes(mangaId)) {
-            collectedIds.push(mangaId);
+        if (title && mangaId && !latestIds.includes(mangaId)) {
+            latestIds.push(mangaId);
             latestArray.push(App.createPartialSourceManga({
                 mangaId: mangaId,
                 image: image,
