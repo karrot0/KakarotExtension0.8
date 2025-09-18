@@ -14894,16 +14894,22 @@ var _Sources = (() => {
       url: DOMAIN,
       method: "GET"
     });
+    const latestRequest = App.createRequest({
+      url: `${DOMAIN}/search?sortby=field_update&page=1`,
+      method: "GET"
+    });
     const newReleasesRequest = App.createRequest({
       url: `${DOMAIN}/search?sortby=field_create&page=1`,
       method: "GET"
     });
-    const [response, newReleasesResponse] = await Promise.all([
+    const [response, latestResponse, newReleasesResponse] = await Promise.all([
       source.requestManager.schedule(request, 1),
+      source.requestManager.schedule(latestRequest, 1),
       source.requestManager.schedule(newReleasesRequest, 1)
     ]);
-    const [$2, $newReleases] = await Promise.all([
+    const [$2, $latest, $newReleases] = await Promise.all([
       load(response.data),
+      load(latestResponse.data),
       load(newReleasesResponse.data)
     ]);
     const popularSection = App.createHomeSection({
@@ -14950,8 +14956,9 @@ var _Sources = (() => {
     popularSection.items = popularArray;
     sectionCallback(popularSection);
     const latestArray = [];
-    $2(".flex.border-b.border-b-base-200.pb-5").each((_, element) => {
-      const unit = $2(element);
+    const latestIds = [];
+    $latest(".flex.border-b.border-b-base-200.pb-5").each((_, element) => {
+      const unit = $latest(element);
       const titleLink = unit.find("h3 a");
       const title = titleLink.find("span").text().trim();
       const imageSrc = unit.find("img").attr("src") || "";
@@ -14961,8 +14968,8 @@ var _Sources = (() => {
       const latestChapter = chapterLink.find("span").text().trim();
       const latestChapterMatch = latestChapter.match(/Chapter (\d+)/);
       const subtitle = latestChapterMatch ? `Ch. ${latestChapterMatch[1]}` : void 0;
-      if (title && mangaId && !collectedIds.includes(mangaId)) {
-        collectedIds.push(mangaId);
+      if (title && mangaId && !latestIds.includes(mangaId)) {
+        latestIds.push(mangaId);
         latestArray.push(App.createPartialSourceManga({
           mangaId,
           image,
@@ -15003,7 +15010,7 @@ var _Sources = (() => {
   // src/Mangapark/Mangapark.ts
   var DOMAIN2 = "https://mangapark.io";
   var MangaparkInfo = {
-    version: "0.0.2",
+    version: "0.0.3",
     name: "Mangapark",
     description: `Extension that pulls manga from ${DOMAIN2}`,
     author: "Karrot",
@@ -15164,7 +15171,7 @@ var _Sources = (() => {
       const collectedIds = metadata?.collectedIds ?? [];
       let url;
       if (homepageSectionId === "latest") {
-        url = `${DOMAIN2}/search?page=${page}`;
+        url = `${DOMAIN2}/search?sortby=field_update&page=${page}`;
       } else if (homepageSectionId === "newReleases") {
         url = `${DOMAIN2}/search?sortby=field_create&page=${page}`;
       } else {
