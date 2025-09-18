@@ -14931,7 +14931,7 @@ var _Sources = (() => {
       const titleLink = unit.find("div.absolute a.link.link-hover.text-sm").first();
       const title = titleLink.text().trim();
       const imageSrc = unit.find("a.block.w-full img").attr("src") || "";
-      const image = imageSrc.startsWith("http") ? imageSrc : imageSrc.startsWith("/") ? `${DOMAIN}${imageSrc.slice(1)}` : `${DOMAIN}${imageSrc}`;
+      const image = imageSrc.startsWith("http") ? imageSrc : `${DOMAIN}${imageSrc}`;
       const mangaId = titleLink.attr("href")?.replace("/title/", "") || "";
       const chapterLink = unit.find("div.absolute span.line-clamp-1 a.link.link-hover.text-xs").first();
       const latestChapter = chapterLink.text().trim();
@@ -15003,7 +15003,7 @@ var _Sources = (() => {
   // src/Mangapark/Mangapark.ts
   var DOMAIN2 = "https://mangapark.io";
   var MangaparkInfo = {
-    version: "0.0.1",
+    version: "0.0.2",
     name: "Mangapark",
     description: `Extension that pulls manga from ${DOMAIN2}`,
     author: "Karrot",
@@ -15048,10 +15048,12 @@ var _Sources = (() => {
       const $2 = load(response.data);
       const title = $2("h3 a").first().text().trim();
       const altTitles = [$2("div[q\\:key='tz_2'] span").first().text().trim()];
-      const imageElem = $2("img[alt]").first();
+      const imageElem = $2("img").first();
       let image = imageElem.attr("src") || imageElem.attr("data-src") || "";
-      if (image && !image.startsWith("http")) {
-        image = image.startsWith("/") ? `${DOMAIN2}${image.slice(1)}` : `${DOMAIN2}${image}`;
+      if (image.startsWith("//")) {
+        image = `https:${image}`;
+      } else if (image && !image.startsWith("http")) {
+        image = `${DOMAIN2}${image}`;
       }
       const description = $2(".limit-html").first().text().trim() || $2(".manga-detail .info .description").text().trim();
       const authors = [];
