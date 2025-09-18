@@ -61,8 +61,8 @@ export const parseHomeSections = async (
         const unit = $(element);
         const titleLink = unit.find("div.absolute a.link.link-hover.text-sm").first();
         const title = titleLink.text().trim();
-              const imageSrc = unit.find("a.block.w-full img").attr("src") || "";
-      const image = imageSrc.startsWith("http") ? imageSrc : imageSrc.startsWith("/") ? `${DOMAIN}${imageSrc.slice(1)}` : `${DOMAIN}${imageSrc}`;
+        const imageSrc = unit.find("a.block.w-full img").attr("src") || "";
+        const image = imageSrc.startsWith("http") ? imageSrc : `${DOMAIN}${imageSrc}`;
         const mangaId = titleLink.attr("href")?.replace("/title/", "") || "";
 
         const chapterLink = unit.find("div.absolute span.line-clamp-1 a.link.link-hover.text-xs").first();

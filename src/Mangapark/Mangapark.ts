@@ -27,7 +27,7 @@ import {
 const DOMAIN = "https://mangapark.io";
 
 export const MangaparkInfo: SourceInfo = {
-    version: '0.0.1',
+    version: '0.0.2',
     name: 'Mangapark',
     description: `Extension that pulls manga from ${DOMAIN}`,
     author: 'Karrot',
@@ -84,10 +84,12 @@ export class Mangapark
 
         const title = $("h3 a").first().text().trim();
         const altTitles = [$("div[q\\:key='tz_2'] span").first().text().trim()];
-        const imageElem = $("img[alt]").first();
+        const imageElem = $("img").first();
         let image = imageElem.attr("src") || imageElem.attr("data-src") || "";
-        if (image && !image.startsWith("http")) {
-            image = image.startsWith("/") ? `${DOMAIN}${image.slice(1)}` : `${DOMAIN}${image}`;
+        if (image.startsWith("//")) {
+            image = `https:${image}`;
+        } else if (image && !image.startsWith("http")) {
+            image = `${DOMAIN}${image}`;
         }
         const description = $(".limit-html").first().text().trim() || $(".manga-detail .info .description").text().trim();
 
