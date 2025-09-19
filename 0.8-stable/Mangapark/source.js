@@ -15007,10 +15007,202 @@ var _Sources = (() => {
     sectionCallback(newReleasesSection);
   };
 
+  // src/Mangapark/model.ts
+  var STATIC_SEARCH_DETAILS = {
+    types: [
+      { id: "artbook", label: "Artbook" },
+      { id: "cartoon", label: "Cartoon" },
+      { id: "comic", label: "Comic" },
+      { id: "doujinshi", label: "Doujinshi" },
+      { id: "imageset", label: "Imageset" },
+      { id: "manga", label: "Manga" },
+      { id: "manhua", label: "Manhua" },
+      { id: "manhwa", label: "Manhwa" },
+      { id: "webtoon", label: "Webtoon" },
+      { id: "oneshot", label: "Oneshot" },
+      { id: "_4_koma", label: "4-Koma" },
+      { id: "ai_art", label: "Art-by-AI" },
+      { id: "ai_story", label: "Story-by-AI" }
+    ],
+    demographics: [
+      { id: "shoujo", label: "Shoujo(G)" },
+      { id: "shounen", label: "Shounen(B)" },
+      { id: "josei", label: "Josei(W)" },
+      { id: "seinen", label: "Seinen(M)" },
+      { id: "yuri", label: "Yuri(GL)" },
+      { id: "yaoi", label: "Yaoi(BL)" },
+      { id: "futa", label: "Futa(\u26A4)" },
+      { id: "bara", label: "Bara(ML)" },
+      { id: "kodomo", label: "Kodomo(Kid)" },
+      { id: "old_people", label: "Silver & Golden" },
+      { id: "shoujo_ai", label: "Shoujo ai" },
+      { id: "shounen_ai", label: "Shounen ai" },
+      { id: "non_human", label: "Non-human" }
+    ],
+    contentRating: [
+      { id: "gore", label: "Gore" },
+      { id: "bloody", label: "Bloody" },
+      { id: "violence", label: "Violence" },
+      { id: "ecchi", label: "Ecchi" },
+      { id: "adult", label: "Adult" },
+      { id: "mature", label: "Mature" },
+      { id: "smut", label: "Smut" }
+    ],
+    genres: [
+      { id: "action", label: "Action" },
+      { id: "adaptation", label: "Adaptation" },
+      { id: "adventure", label: "Adventure" },
+      { id: "age_gap", label: "Age Gap" },
+      { id: "aliens", label: "Aliens" },
+      { id: "animals", label: "Animals" },
+      { id: "anthology", label: "Anthology" },
+      { id: "beasts", label: "Beasts" },
+      { id: "bodyswap", label: "Bodyswap" },
+      { id: "blackmail", label: "Blackmail" },
+      { id: "brocon_siscon", label: "Brocon/Siscon" },
+      { id: "cars", label: "Cars" },
+      { id: "cheating_infidelity", label: "Cheating/Infidelity" },
+      { id: "childhood_friends", label: "Childhood Friends" },
+      { id: "college_life", label: "College life" },
+      { id: "comedy", label: "Comedy" },
+      { id: "contest_winning", label: "Contest winning" },
+      { id: "cooking", label: "Cooking" },
+      { id: "crime", label: "Crime" },
+      { id: "crossdressing", label: "Crossdressing" },
+      { id: "cultivation", label: "Cultivation" },
+      { id: "death_game", label: "Death Game" },
+      { id: "degeneratemc", label: "DegenerateMC" },
+      { id: "delinquents", label: "Delinquents" },
+      { id: "dementia", label: "Dementia" },
+      { id: "demons", label: "Demons" },
+      { id: "drama", label: "Drama" },
+      { id: "fantasy", label: "Fantasy" },
+      { id: "fan_colored", label: "Fan-Colored" },
+      { id: "fetish", label: "Fetish" },
+      { id: "full_color", label: "Full Color" },
+      { id: "game", label: "Game" },
+      { id: "gender_bender", label: "Gender Bender" },
+      { id: "genderswap", label: "Genderswap" },
+      { id: "ghosts", label: "Ghosts" },
+      { id: "gyaru", label: "Gyaru" },
+      { id: "harem", label: "Harem" },
+      { id: "harlequin", label: "Harlequin" },
+      { id: "historical", label: "Historical" },
+      { id: "horror", label: "Horror" },
+      { id: "incest", label: "Incest" },
+      { id: "isekai", label: "Isekai" },
+      { id: "kids", label: "Kids" },
+      { id: "loli", label: "Loli" },
+      { id: "magic", label: "Magic" },
+      { id: "magical_girls", label: "Magical Girls" },
+      { id: "martial_arts", label: "Martial Arts" },
+      { id: "master_servant", label: "Master-Servant" },
+      { id: "mecha", label: "Mecha" },
+      { id: "medical", label: "Medical" },
+      { id: "military", label: "Military" },
+      { id: "monster_girls", label: "Monster Girls" },
+      { id: "monsters", label: "Monsters" },
+      { id: "music", label: "Music" },
+      { id: "mystery", label: "Mystery" },
+      { id: "netori", label: "Netori" },
+      { id: "netorare", label: "Netorare/NTR" },
+      { id: "ninja", label: "Ninja" },
+      { id: "office_workers", label: "Office Workers" },
+      { id: "omegaverse", label: "Omegaverse" },
+      { id: "parody", label: "Parody" },
+      { id: "philosophical", label: "Philosophical" },
+      { id: "police", label: "Police" },
+      { id: "post_apocalyptic", label: "Post-Apocalyptic" },
+      { id: "psychological", label: "Psychological" },
+      { id: "reincarnation", label: "Reincarnation" },
+      { id: "revenge", label: "Revenge" },
+      { id: "reverse_harem", label: "Reverse Harem" },
+      { id: "romance", label: "Romance" },
+      { id: "samurai", label: "Samurai" },
+      { id: "school_life", label: "School Life" },
+      { id: "sci_fi", label: "Sci-Fi" },
+      { id: "shota", label: "Shota" },
+      { id: "showbiz", label: "Showbiz" },
+      { id: "slice_of_life", label: "Slice of Life" },
+      { id: "sm_bdsm", label: "SM/BDSM" },
+      { id: "space", label: "Space" },
+      { id: "sports", label: "Sports" },
+      { id: "spy", label: "Spy" },
+      { id: "step_family", label: "Step Family" },
+      { id: "super_power", label: "Super Power" },
+      { id: "superhero", label: "Superhero" },
+      { id: "supernatural", label: "Supernatural" },
+      { id: "survival", label: "Survival" },
+      { id: "teacher_student", label: "Teacher-Student" },
+      { id: "thriller", label: "Thriller" },
+      { id: "time_travel", label: "Time Travel" },
+      { id: "traditional_games", label: "Traditional Games" },
+      { id: "tragedy", label: "Tragedy" },
+      { id: "vampires", label: "Vampires" },
+      { id: "video_games", label: "Video Games" },
+      { id: "villainess", label: "Villainess" },
+      { id: "virtual_reality", label: "Virtual Reality" },
+      { id: "wuxia", label: "Wuxia" },
+      { id: "xianxia", label: "Xianxia" },
+      { id: "xuanhuan", label: "Xuanhuan" },
+      { id: "zombies", label: "Zombies" }
+    ],
+    status: [
+      { id: "pending", label: "Pending" },
+      { id: "ongoing", label: "Ongoing" },
+      { id: "completed", label: "Completed" },
+      { id: "hiatus", label: "Hiatus" },
+      { id: "cancelled", label: "Cancelled" }
+    ],
+    languages: [
+      { id: "0", label: "Chinese" },
+      { id: "1", label: "English" },
+      { id: "2", label: "Japanese" },
+      { id: "3", label: "Korean" }
+    ],
+    years: [],
+    lengths: [
+      { id: "0", label: "0" },
+      { id: "1", label: "1+" },
+      { id: "10", label: "10+" },
+      { id: "20", label: "20+" },
+      { id: "30", label: "30+" },
+      { id: "40", label: "40+" },
+      { id: "50", label: "50+" },
+      { id: "60", label: "60+" },
+      { id: "70", label: "70+" },
+      { id: "80", label: "80+" },
+      { id: "90", label: "90+" },
+      { id: "100", label: "100+" },
+      { id: "200", label: "200+" },
+      { id: "300", label: "300+" },
+      { id: "200-299", label: "299~200" },
+      { id: "100-199", label: "199~100" },
+      { id: "90-99", label: "99~90" },
+      { id: "80-89", label: "89~80" },
+      { id: "70-79", label: "79~70" },
+      { id: "60-69", label: "69~60" },
+      { id: "50-59", label: "59~50" },
+      { id: "40-49", label: "49~40" },
+      { id: "30-39", label: "39~30" },
+      { id: "20-29", label: "29~20" },
+      { id: "10-19", label: "19~10" },
+      { id: "1-9", label: "9~1" }
+    ],
+    sorts: [
+      { id: "field_score", label: "Order by Score" },
+      { id: "field_follow", label: "Most Follows" },
+      { id: "field_chapter", label: "Most Chapters" },
+      { id: "field_update", label: "New Chapters" },
+      { id: "field_create", label: "Recently Created" },
+      { id: "field_name", label: "Name A-Z" }
+    ]
+  };
+
   // src/Mangapark/Mangapark.ts
   var DOMAIN2 = "https://mangapark.io";
   var MangaparkInfo = {
-    version: "0.0.3",
+    version: "0.0.4",
     name: "Mangapark",
     description: `Extension that pulls manga from ${DOMAIN2}`,
     author: "Karrot",
@@ -15119,18 +15311,83 @@ var _Sources = (() => {
     async getHomePageSections(sectionCallback) {
       await parseHomeSections(this, sectionCallback);
     }
+    async getSearchTags() {
+      const sections = [];
+      const addSection = (id, label, items, prefix) => {
+        if (!items || items.length === 0) return;
+        sections.push({
+          id,
+          label,
+          tags: items.map((it) => ({ id: `${prefix}:${it.id}`, label: it.label }))
+        });
+      };
+      addSection("types", "Types", STATIC_SEARCH_DETAILS.types, "type");
+      addSection("demographics", "Demographics", STATIC_SEARCH_DETAILS.demographics, "demo");
+      addSection("contentRating", "Content Rating", STATIC_SEARCH_DETAILS.contentRating, "cr");
+      addSection("genres", "Genres", STATIC_SEARCH_DETAILS.genres, "genre");
+      addSection("status", "Status", STATIC_SEARCH_DETAILS.status, "status");
+      addSection("languages", "Languages", STATIC_SEARCH_DETAILS.languages, "lang");
+      if (STATIC_SEARCH_DETAILS.years && STATIC_SEARCH_DETAILS.years.length > 0) {
+        addSection("years", "Years", STATIC_SEARCH_DETAILS.years, "year");
+      }
+      addSection("lengths", "Lengths", STATIC_SEARCH_DETAILS.lengths, "length");
+      addSection("sorts", "Sort", STATIC_SEARCH_DETAILS.sorts, "sort");
+      return sections;
+    }
     async getSearchResults(query, metadata) {
       const page = metadata?.page ?? 1;
       const collectedIds = metadata?.collectedIds ?? [];
-      const searchTerm = query.title ?? "";
-      let url;
-      if (searchTerm.trim() === "") {
-        url = `${DOMAIN2}/search?page=${page}`;
-      } else {
-        url = `${DOMAIN2}/search?word=${encodeURIComponent(searchTerm)}&page=${page}`;
+      let searchUrl = `${DOMAIN2}/search?page=${page}`;
+      const included = query.includedTags ?? [];
+      const getFilterValue = (prefix) => included.find((t) => t?.id?.startsWith(prefix + ":"))?.id?.split(":", 2)[1];
+      const type = getFilterValue("type");
+      const genres = included.filter((t) => t?.id?.startsWith("genre:")).map((t) => t.id.split(":", 2)[1]);
+      const contentRating = included.filter((t) => t?.id?.startsWith("cr:")).map((t) => t.id.split(":", 2)[1]);
+      const demographics = included.filter((t) => t?.id?.startsWith("demo:")).map((t) => t.id.split(":", 2)[1]);
+      const status = getFilterValue("status");
+      const languages = getFilterValue("lang");
+      const year = getFilterValue("year");
+      const length = getFilterValue("length");
+      const sortTag = included.find((t) => t?.id?.startsWith("sort:"));
+      const sortVal = sortTag?.id?.split(":", 2)[1];
+      const includedTokens = [];
+      if (genres.length > 0) {
+        includedTokens.push(...genres.filter((g) => g !== void 0));
       }
+      if (demographics.length > 0) {
+        includedTokens.push(...demographics.filter((d) => d !== void 0));
+      }
+      if (contentRating.length > 0) {
+        includedTokens.push(...contentRating.filter((c) => c !== void 0));
+      }
+      if (type && type !== "all") {
+        includedTokens.push(type);
+      }
+      if (includedTokens.length > 0) {
+        const genresParam = includedTokens.join(",");
+        searchUrl += `&genres=${encodeURIComponent(genresParam)}`;
+      }
+      if (status && status !== "all") {
+        searchUrl += `&status=${encodeURIComponent(status)}`;
+      }
+      if (languages && languages !== "all") {
+        searchUrl += `&language=${encodeURIComponent(languages)}`;
+      }
+      if (year && year !== "all") {
+        searchUrl += `&year=${encodeURIComponent(year)}`;
+      }
+      if (length && length !== "all") {
+        searchUrl += `&chapters=${encodeURIComponent(length)}`;
+      }
+      if (sortVal) {
+        searchUrl += `&sortby=${encodeURIComponent(sortVal)}`;
+      }
+      if (query.title && query.title.trim()) {
+        searchUrl += `&word=${encodeURIComponent(query.title.trim())}`;
+      }
+      searchUrl += `&lang=en`;
       const request = App.createRequest({
-        url,
+        url: searchUrl,
         method: "GET"
       });
       const response = await this.requestManager.schedule(request, 1);
@@ -15245,12 +15502,19 @@ var _Sources = (() => {
         const timeElement = row.find("time").first();
         const timestamp = timeElement.attr("data-time");
         const publishDate = timestamp ? new Date(parseInt(timestamp)) : /* @__PURE__ */ new Date();
+        const meta = row.find(
+          ".ml-auto.inline-flex.flex-wrap.justify-end.items-center.text-sm.opacity-70.space-x-2"
+        ).first();
+        let groupName = meta.find(".inline-flex.items-center.space-x-1 span").first().text().trim();
+        if (!groupName) groupName = "Unknown";
         chapters.push(App.createChapter({
           id: chapterId,
           chapNum,
+          volume: 0,
           name: title,
           time: publishDate,
-          langCode: "\u{1F1EC}\u{1F1E7}"
+          langCode: "\u{1F1EC}\u{1F1E7}",
+          group: groupName
         }));
       });
       return chapters;
