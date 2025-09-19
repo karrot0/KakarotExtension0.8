@@ -24,10 +24,12 @@ import {
     parseHomeSections,
 } from './MangaparkParser'
 
+import { STATIC_SEARCH_DETAILS } from './model'
+
 const DOMAIN = "https://mangapark.io";
 
 export const MangaparkInfo: SourceInfo = {
-    version: '0.0.3',
+    version: '0.0.4',
     name: 'Mangapark',
     description: `Extension that pulls manga from ${DOMAIN}`,
     author: 'Karrot',
@@ -167,21 +169,123 @@ export class Mangapark
         await parseHomeSections(this, sectionCallback)
     }
 
-    async getSearchResults(query: SearchRequest, metadata: any): Promise<PagedResults> {
-        const page: number = metadata?.page ?? 1;
-        const collectedIds: string[] = metadata?.collectedIds ?? [];
+    async getSearchTags(): Promise<TagSection[]> {
+        const sections: TagSection[] = []
 
-        const searchTerm = query.title ?? "";
-
-        let url: string;
-        if (searchTerm.trim() === "") {
-            url = `${DOMAIN}/search?page=${page}`;
-        } else {
-            url = `${DOMAIN}/search?word=${encodeURIComponent(searchTerm)}&page=${page}`;
+        const addSection = (id: string, label: string, items: { id: string; label: string }[], prefix: string) => {
+            if (!items || items.length === 0) return
+            sections.push({
+                id,
+                label,
+                tags: items.map(it => ({ id: `${prefix}:${it.id}`, label: it.label }))
+            })
         }
 
+        addSection('types', 'Types', STATIC_SEARCH_DETAILS.types, 'type')
+        addSection('demographics', 'Demographics', STATIC_SEARCH_DETAILS.demographics, 'demo')
+        addSection('contentRating', 'Content Rating', STATIC_SEARCH_DETAILS.contentRating, 'cr')
+        addSection('genres', 'Genres', STATIC_SEARCH_DETAILS.genres, 'genre')
+        addSection('status', 'Status', STATIC_SEARCH_DETAILS.status, 'status')
+        addSection('languages', 'Languages', STATIC_SEARCH_DETAILS.languages, 'lang')
+        if (STATIC_SEARCH_DETAILS.years && STATIC_SEARCH_DETAILS.years.length > 0) {
+            addSection('years', 'Years', STATIC_SEARCH_DETAILS.years, 'year')
+        }
+        addSection('lengths', 'Lengths', STATIC_SEARCH_DETAILS.lengths, 'length')
+        addSection('sorts', 'Sort', STATIC_SEARCH_DETAILS.sorts, 'sort')
+
+        return sections
+    }
+
+    async getSearchResults(query: SearchRequest, metadata: any): Promise<PagedResults> {
+        const page: number = metadata?.page ?? 1
+        const collectedIds: string[] = metadata?.collectedIds ?? []
+
+        // Mangapark search URL format:
+        // https://mangapark.io/search?genres=manga,shounen,ecchi,action|loli,reverse_harem,sm_bdsm&status=ongoing&chapters=1&sortby=field_score&page=1
+        let searchUrl = `${DOMAIN}/search?page=${page}`
+
+        const included = query.includedTags ?? []
+
+        // Get filter values
+        const getFilterValue = (prefix: string) =>
+            included.find(t => t?.id?.startsWith(prefix + ':'))?.id?.split(':', 2)[1]
+
+        const type = getFilterValue('type')
+        const genres = included.filter(t => t?.id?.startsWith('genre:')).map(t => t.id.split(':', 2)[1])
+        const contentRating = included.filter(t => t?.id?.startsWith('cr:')).map(t => t.id.split(':', 2)[1])
+        const demographics = included.filter(t => t?.id?.startsWith('demo:')).map(t => t.id.split(':', 2)[1])
+        const status = getFilterValue('status')
+        const languages = getFilterValue('lang')
+        const year = getFilterValue('year')
+        const length = getFilterValue('length')
+        const sortTag = included.find(t => t?.id?.startsWith('sort:'))
+        const sortVal = sortTag?.id?.split(':', 2)[1]
+
+        // Aggregate included tokens across genres, demographics, contentRating, and type
+        const includedTokens: string[] = []
+
+        // Add genres
+        if (genres.length > 0) {
+            includedTokens.push(...genres.filter(g => g !== undefined))
+        }
+
+        // Add demographics
+        if (demographics.length > 0) {
+            includedTokens.push(...demographics.filter(d => d !== undefined))
+        }
+
+        // Add content rating
+        if (contentRating.length > 0) {
+            includedTokens.push(...contentRating.filter(c => c !== undefined))
+        }
+
+        // Handle type (manga, manhua, manhwa) - always treated as included when selected
+        if (type && type !== 'all') {
+            includedTokens.push(type)
+        }
+
+        // Build genres param with comma separator for included tokens only
+        // Note: 0.8 doesn't support excluded filters like 0.9, so we only handle included
+        if (includedTokens.length > 0) {
+            const genresParam = includedTokens.join(',')
+            searchUrl += `&genres=${encodeURIComponent(genresParam)}`
+        }
+
+        // Handle status
+        if (status && status !== 'all') {
+            searchUrl += `&status=${encodeURIComponent(status)}`
+        }
+
+        // Handle language
+        if (languages && languages !== 'all') {
+            searchUrl += `&language=${encodeURIComponent(languages)}`
+        }
+
+        // Handle year
+        if (year && year !== 'all') {
+            searchUrl += `&year=${encodeURIComponent(year)}`
+        }
+
+        // Handle chapters (length)
+        if (length && length !== 'all') {
+            searchUrl += `&chapters=${encodeURIComponent(length)}`
+        }
+
+        // Handle sorting
+        if (sortVal) {
+            searchUrl += `&sortby=${encodeURIComponent(sortVal)}`
+        }
+
+        // Add keyword if present
+        if (query.title && query.title.trim()) {
+            searchUrl += `&word=${encodeURIComponent(query.title.trim())}`
+        }
+
+        // Always add lang=en like 0.9 does
+        searchUrl += `&lang=en`
+
         const request = App.createRequest({
-            url: url,
+            url: searchUrl,
             method: 'GET',
         })
 
@@ -189,7 +293,7 @@ export class Mangapark
         const $ = cheerio.load(response.data as string)
 
         const results: PartialSourceManga[] = []
-        const newCollectedIds = [...collectedIds];
+        const newCollectedIds = [...collectedIds]
 
         $(".flex.border-b.border-b-base-200.pb-5").each((_, element) => {
             const unit = $(element);
@@ -322,12 +426,27 @@ export class Mangapark
             const timestamp = timeElement.attr("data-time");
             const publishDate = timestamp ? new Date(parseInt(timestamp)) : new Date();
 
+            // Parse group/version name from the right-side metadata
+            const meta = row
+                .find(
+                    ".ml-auto.inline-flex.flex-wrap.justify-end.items-center.text-sm.opacity-70.space-x-2",
+                )
+                .first();
+            let groupName = meta
+                .find(".inline-flex.items-center.space-x-1 span")
+                .first()
+                .text()
+                .trim();
+            if (!groupName) groupName = "Unknown";
+
             chapters.push(App.createChapter({
                 id: chapterId,
                 chapNum: chapNum,
+                volume: 0,
                 name: title,
                 time: publishDate,
-                langCode: "🇬🇧"
+                langCode: "🇬🇧",
+                group: groupName
             }));
         });
 
