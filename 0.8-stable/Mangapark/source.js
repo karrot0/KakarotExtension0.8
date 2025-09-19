@@ -15202,7 +15202,7 @@ var _Sources = (() => {
   // src/Mangapark/Mangapark.ts
   var DOMAIN2 = "https://mangapark.io";
   var MangaparkInfo = {
-    version: "0.0.4",
+    version: "0.0.5",
     name: "Mangapark",
     description: `Extension that pulls manga from ${DOMAIN2}`,
     author: "Karrot",
@@ -15489,7 +15489,7 @@ var _Sources = (() => {
         const title = chapterElement.text().trim();
         const cleanedTitle = title.replace(/Vol\.?\s*\d+(?:\.\d+)?/gi, "").trim();
         let chapNum = 0;
-        const match = cleanedTitle.match(/(?:Ch(?:apter)?\.?\s*)(\d+(?:\.\d+)?)/i);
+        const match = cleanedTitle.match(/(?:Ch(?:apter)?[.\s-]*(\d+(?:\.\d+)?))/i);
         if (match && match[1]) {
           chapNum = parseFloat(match[1]);
         } else {
