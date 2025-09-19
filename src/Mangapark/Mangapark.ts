@@ -29,7 +29,7 @@ import { STATIC_SEARCH_DETAILS } from './model'
 const DOMAIN = "https://mangapark.io";
 
 export const MangaparkInfo: SourceInfo = {
-    version: '0.0.4',
+    version: '0.0.5',
     name: 'Mangapark',
     description: `Extension that pulls manga from ${DOMAIN}`,
     author: 'Karrot',
@@ -410,7 +410,7 @@ export class Mangapark
             // Remove any Volume prefix like "Vol.02" before extracting chapter
             const cleanedTitle = title.replace(/Vol\.?\s*\d+(?:\.\d+)?/gi, "").trim();
             let chapNum = 0;
-            const match = cleanedTitle.match(/(?:Ch(?:apter)?\.?\s*)(\d+(?:\.\d+)?)/i);
+            const match = cleanedTitle.match(/(?:Ch(?:apter)?[.\s-]*(\d+(?:\.\d+)?))/i);
             if (match && match[1]) {
                 chapNum = parseFloat(match[1]);
             } else {
