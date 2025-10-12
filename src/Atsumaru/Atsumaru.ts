@@ -21,7 +21,7 @@ import {
 const DOMAIN = "https://atsu.moe";
 
 export const AtsumaruInfo: SourceInfo = {
-    version: '0.0.1',
+    version: '0.0.2',
     name: 'Atsumaru',
     description: `Extension that pulls manga from ${DOMAIN}`,
     author: 'Karrot',
@@ -344,30 +344,52 @@ export class Atsumaru
     }
 
     async getChapters(mangaId: string): Promise<Chapter[]> {
-        const request = App.createRequest({
-            url: `${DOMAIN}/api/manga/page?id=${mangaId}`,
-            method: 'GET',
-        });
-
-        const response = await this.requestManager.schedule(request, 1)
-        const data = JSON.parse(response.data as string)
         const chapters: Chapter[] = [];
+        let currentPage = 0;
+        let totalPages = 1;
 
-        for (const chapterItem of data.mangaPage.chapters) {
-            const publishDate = new Date(chapterItem.createdAt);
-            chapters.push(App.createChapter({
-                id: chapterItem.id,
-                chapNum: chapterItem.number,
-                volume: 0, // API doesn't provide volume info
-                name: chapterItem.title,
-                time: publishDate,
-                langCode: "🇬🇧",
-                group: "Default" // API doesn't provide group info
-            }));
-        }
+        do {
+            const request = App.createRequest({
+                url: `${DOMAIN}/api/manga/chapters?id=${mangaId}&filter=all&sort=desc&page=${currentPage}`,
+                method: 'GET',
+            });
 
-        // Sort chapters by chapter number descending (latest first)
+            try {
+                const response = await this.requestManager.schedule(request, 1);
+                const data = JSON.parse(response.data as string);
+
+                if (!data?.chapters?.length) {
+                    console.warn(`[chapters] No chapters found on page ${currentPage} for ${mangaId}`);
+                    break;
+                }
+
+                for (const ch of data.chapters) {
+                    const stripped = ch.title?.replace(/^Chapter\s*/i, "").trim();
+                    const isNumeric = /^\d+$/.test(stripped ?? "");
+
+                    chapters.push(App.createChapter({
+                        id: ch.id,
+                        chapNum: ch.number ?? 0,
+                        volume: 0,
+                        name: isNumeric ? undefined : stripped, // let Paperback generate title if number only
+                        time: new Date(ch.createdAt),
+                        langCode: "🇬🇧",
+                        group: "Default"
+                    }));
+                }
+
+                totalPages = data.pages ?? 1;
+                currentPage++;
+            } catch (err: unknown) {
+                console.error(`[chapters] fetchJson error on page ${currentPage}:`, err);
+                break;
+            }
+        } while (currentPage <= totalPages);
+
         chapters.sort((a, b) => (b.chapNum ?? 0) - (a.chapNum ?? 0));
+
+        console.log(`[chapters] Loaded ${chapters.length} chapters for ${mangaId} (${totalPages} pages)`);
+
         return chapters;
     }
 
