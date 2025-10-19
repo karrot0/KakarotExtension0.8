@@ -15202,7 +15202,7 @@ var _Sources = (() => {
   // src/Mangapark/Mangapark.ts
   var DOMAIN2 = "https://mangapark.io";
   var MangaparkInfo = {
-    version: "0.0.5",
+    version: "0.0.6",
     name: "Mangapark",
     description: `Extension that pulls manga from ${DOMAIN2}`,
     author: "Karrot",
@@ -15226,7 +15226,8 @@ var _Sources = (() => {
                 "user-agent": await this.requestManager.getDefaultUserAgent(),
                 accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
                 "accept-language": "en-US,en;q=0.5",
-                "accept-encoding": "gzip, deflate, br"
+                "accept-encoding": "gzip, deflate, br",
+                "cookie": "nsfw=2"
               }
             };
             request.url = request.url.replace(/^http:/, "https:");
