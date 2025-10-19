@@ -29,7 +29,7 @@ import { STATIC_SEARCH_DETAILS } from './model'
 const DOMAIN = "https://mangapark.io";
 
 export const MangaparkInfo: SourceInfo = {
-    version: '0.0.5',
+    version: '0.0.6',
     name: 'Mangapark',
     description: `Extension that pulls manga from ${DOMAIN}`,
     author: 'Karrot',
@@ -61,6 +61,7 @@ export class Mangapark
                         accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
                         "accept-language": "en-US,en;q=0.5",
                         "accept-encoding": "gzip, deflate, br",
+                        "cookie": "nsfw=2"
                     },
                 };
 
