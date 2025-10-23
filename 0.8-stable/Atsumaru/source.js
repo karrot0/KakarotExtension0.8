@@ -730,7 +730,7 @@ var _Sources = (() => {
   var import_types = __toESM(require_lib());
   var DOMAIN = "https://atsu.moe";
   var AtsumaruInfo = {
-    version: "0.0.3",
+    version: "1.0.0-alpha.4",
     name: "Atsumaru",
     description: `Extension that pulls manga from ${DOMAIN}`,
     author: "Karrot",
@@ -746,6 +746,9 @@ var _Sources = (() => {
     }
     if (imagePath.startsWith("/static/")) {
       return `${DOMAIN}${imagePath}`;
+    }
+    if (imagePath.startsWith("/")) {
+      return `${DOMAIN}${imagePath.substring(1)}`;
     }
     return `${DOMAIN}/static/${imagePath}`;
   }
