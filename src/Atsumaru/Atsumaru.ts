@@ -21,7 +21,7 @@ import {
 const DOMAIN = "https://atsu.moe";
 
 export const AtsumaruInfo: SourceInfo = {
-    version: '0.0.3',
+    version: '1.0.0-alpha.4',
     name: 'Atsumaru',
     description: `Extension that pulls manga from ${DOMAIN}`,
     author: 'Karrot',
@@ -39,10 +39,15 @@ function constructImageUrl(imagePath: string): string {
     if (imagePath.startsWith("http")) {
         return imagePath;
     }
-    // If it starts with "/static/", use as is after domain, else prepend "static/"
+    // If it starts with "/static/", use as is after domain
     if (imagePath.startsWith("/static/")) {
         return `${DOMAIN}${imagePath}`;
     }
+    // If it starts with "/", remove the leading slash and append to domain
+    if (imagePath.startsWith("/")) {
+        return `${DOMAIN}${imagePath.substring(1)}`;
+    }
+    // Default: prepend "static/" to the domain
     return `${DOMAIN}/static/${imagePath}`;
 }
 
