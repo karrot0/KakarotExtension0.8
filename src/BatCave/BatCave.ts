@@ -27,7 +27,7 @@ import {
 const DOMAIN = "https://batcave.biz";
 
 export const BatCaveInfo: SourceInfo = {
-    version: '0.0.6',
+    version: '0.0.7',
     name: 'BatCave',
     description: `Extension that pulls manga from ${DOMAIN}`,
     author: 'Karrot',
@@ -327,10 +327,12 @@ export class BatCave
                 }
             })
         } else if (homepageSectionId === 'newComics') {
-            $(".sect--latest .latest.grid-item, .latest-chapter").each((_, element) => {
+            // Use the content container's id so we only target the current list
+            $("#content-load .latest.grid-item").each((_, element) => {
                 const unit = $(element);
+                // Target the anchor inside .latest__title to keep inner icons out of the title text
                 const title = unit
-                    .find(".latest__title, .latest-chapter__title")
+                    .find(".latest__title a")
                     .clone()
                     .children()
                     .remove()
@@ -341,15 +343,13 @@ export class BatCave
                 const image = rawImage.startsWith("/")
                     ? `https://batcave.biz${rawImage}`
                     : rawImage;
-                const rawMangaId = unit
-                    .find(".latest__title, .latest-chapter__title")
-                    .closest("a")
-                    .attr("href");
+                // Grab the href from the title anchor rather than using closest()
+                const rawMangaId = unit.find(".latest__title a").attr("href");
                 const mangaId = rawMangaId
                     ?.replace(/^.*?\/([^/]+)$/, "$1")
                     .replace(/\.html$/, "")
                     .trim();
-                const latestChapter = unit.find(".latest__chapter a, .latest-chapter__chapter a").text().trim();
+                const latestChapter = unit.find(".latest__chapter a").text().trim();
 
                 if (title && mangaId && !newCollectedIds.includes(mangaId)) {
                     newCollectedIds.push(mangaId);
