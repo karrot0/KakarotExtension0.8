@@ -15000,7 +15000,7 @@ var _Sources = (() => {
   // src/BatCave/BatCave.ts
   var DOMAIN2 = "https://batcave.biz";
   var BatCaveInfo = {
-    version: "0.0.6",
+    version: "0.0.7",
     name: "BatCave",
     description: `Extension that pulls manga from ${DOMAIN2}`,
     author: "Karrot",
@@ -15208,14 +15208,14 @@ var _Sources = (() => {
           }
         });
       } else if (homepageSectionId === "newComics") {
-        $2(".sect--latest .latest.grid-item, .latest-chapter").each((_, element) => {
+        $2("#content-load .latest.grid-item").each((_, element) => {
           const unit = $2(element);
-          const title = unit.find(".latest__title, .latest-chapter__title").clone().children().remove().end().text().trim();
+          const title = unit.find(".latest__title a").clone().children().remove().end().text().trim();
           const rawImage = unit.find(".latest__img img, .latest-chapter__img img").attr("src") || "";
           const image = rawImage.startsWith("/") ? `https://batcave.biz${rawImage}` : rawImage;
-          const rawMangaId = unit.find(".latest__title, .latest-chapter__title").closest("a").attr("href");
+          const rawMangaId = unit.find(".latest__title a").attr("href");
           const mangaId = rawMangaId?.replace(/^.*?\/([^/]+)$/, "$1").replace(/\.html$/, "").trim();
-          const latestChapter = unit.find(".latest__chapter a, .latest-chapter__chapter a").text().trim();
+          const latestChapter = unit.find(".latest__chapter a").text().trim();
           if (title && mangaId && !newCollectedIds.includes(mangaId)) {
             newCollectedIds.push(mangaId);
             results.push(App.createPartialSourceManga({
