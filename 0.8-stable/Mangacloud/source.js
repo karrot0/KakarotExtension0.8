@@ -721,18 +721,136 @@ var _Sources = (() => {
     }
   });
 
-  // src/Atsumaru/Atsumaru.ts
-  var Atsumaru_exports = {};
-  __export(Atsumaru_exports, {
-    Atsumaru: () => Atsumaru,
-    AtsumaruInfo: () => AtsumaruInfo
+  // src/Mangacloud/Mangacloud.ts
+  var Mangacloud_exports = {};
+  __export(Mangacloud_exports, {
+    Mangacloud: () => Mangacloud,
+    MangacloudInfo: () => MangacloudInfo
   });
   var import_types = __toESM(require_lib());
-  var DOMAIN = "https://atsu.moe";
-  var AtsumaruInfo = {
-    version: "1.0.0-alpha.4",
-    name: "Atsumaru",
-    description: `Extension that pulls manga from ${DOMAIN}`,
+
+  // src/Mangacloud/model.ts
+  var Types = [
+    { id: "Manga", name: "Manga" },
+    { id: "Manhua", name: "Manhua" },
+    { id: "Manhwa", name: "Manhwa" }
+  ];
+  var Statuses = [
+    { id: "Ongoing", name: "Ongoing" },
+    { id: "Completed", name: "Completed" },
+    { id: "Cancelled", name: "Cancelled" },
+    { id: "Hiatus", name: "Hiatus" },
+    { id: "Unknown", name: "Unknown" }
+  ];
+  var SortOptions = [
+    { id: "updated_date-DESC", name: "Latest Upload" },
+    { id: "updated_date-ASC", name: "Oldest Upload" },
+    { id: "title-ASC", name: "Title Ascending" },
+    { id: "title-DESC", name: "Title Descending" },
+    { id: "created_date-DESC", name: "Recently Added" },
+    { id: "created_date-ASC", name: "Oldest Added" }
+  ];
+  var Genres = [
+    { id: "131179581037085763", name: "Action" },
+    { id: "131179581028697093", name: "Adventure" },
+    { id: "131179581037085764", name: "Comedy" },
+    { id: "131179581028697098", name: "Crime" },
+    { id: "131179581028697105", name: "Drama" },
+    { id: "131179581028697094", name: "Fantasy" },
+    { id: "131179581028697103", name: "Healing" },
+    { id: "131179581028697095", name: "Historical" },
+    { id: "131179581028697096", name: "Horror" },
+    { id: "131179581028697102", name: "Isekai" },
+    { id: "131179581037085766", name: "Mystery" },
+    { id: "131179581028697106", name: "Philosophical" },
+    { id: "131179581028697107", name: "Psychological" },
+    { id: "131179581028697097", name: "Romance" },
+    { id: "131179581028697099", name: "Sci-Fi" },
+    { id: "131179581028697092", name: "Slice of Life" },
+    { id: "131179581028697104", name: "Sports" },
+    { id: "131179581028697100", name: "Thriller" },
+    { id: "262922194814764598", name: "Tragedy" },
+    { id: "131179581028697101", name: "Wuxia" }
+  ];
+  var Themes = [
+    { id: "131179581037085751", name: "Agriculture" },
+    { id: "131179581037085768", name: "Aliens" },
+    { id: "131179581037085742", name: "Angels" },
+    { id: "131179581037085769", name: "Animals" },
+    { id: "131179581045474384", name: "Board Games" },
+    { id: "131179581037085770", name: "Books" },
+    { id: "131179581037085738", name: "Cooking" },
+    { id: "131179581028697110", name: "Cultivation" },
+    { id: "131179581037085772", name: "Delinquents" },
+    { id: "131179581037085773", name: "Demons" },
+    { id: "131179581037085749", name: "Dungeon" },
+    { id: "131179581037085736", name: "Educational" },
+    { id: "131179581045474382", name: "Elves" },
+    { id: "131179581037085737", name: "Food" },
+    { id: "131179581045474383", name: "Ghosts" },
+    { id: "131179581037085734", name: "Gore" },
+    { id: "131179581037085728", name: "Growth" },
+    { id: "131179581037085757", name: "Gyaru" },
+    { id: "131179581037085729", name: "Harem" },
+    { id: "131179581037085741", name: "Kingdom Building" },
+    { id: "131179581037085758", name: "Mafia" },
+    { id: "131179581028697117", name: "Magic" },
+    { id: "131179581037085752", name: "Martial Arts" },
+    { id: "131179581037085733", name: "Mecha" },
+    { id: "131179581037085743", name: "Medical" },
+    { id: "131179581037085732", name: "Medieval" },
+    { id: "131179581037085727", name: "Military" },
+    { id: "131179581045474385", name: "Monsters" },
+    { id: "131179581028697114", name: "Music" },
+    { id: "131179581037085750", name: "Nature" },
+    { id: "131179581028697113", name: "Ninja" },
+    { id: "131179581037085744", name: "Nobility" },
+    { id: "131179581045474386", name: "Office Workers" },
+    { id: "131179581028697112", name: "Overpowered" },
+    { id: "131179581037085759", name: "Police" },
+    { id: "131179581037085746", name: "Political" },
+    { id: "131179581037085756", name: "Post-Apocalyptic" },
+    { id: "131179581037085771", name: "Power Cheat" },
+    { id: "131179581028697111", name: "Reincarnation" },
+    { id: "131179581028697109", name: "Revenge" },
+    { id: "131179581037085755", name: "Samurai" },
+    { id: "131179581037085748", name: "School Club" },
+    { id: "131179581037085726", name: "School Life" },
+    { id: "131179581028697108", name: "Second Chance" },
+    { id: "131179581037085731", name: "Superhero" },
+    { id: "131179581037085767", name: "Supernatural" },
+    { id: "131179581028697115", name: "Survival" },
+    { id: "131179581028697116", name: "Time Travel" },
+    { id: "267744811266607078", name: "Tower" },
+    { id: "131179581037085747", name: "Training" },
+    { id: "131179581045474387", name: "Vampires" },
+    { id: "131179581045474388", name: "Video Games" },
+    { id: "131179581037085739", name: "Villain" },
+    { id: "131179581037085730", name: "Villainess" },
+    { id: "131179581037085735", name: "Violence" },
+    { id: "131179581037085765", name: "Virtual Reality" },
+    { id: "131179581037085754", name: "Virtual System" },
+    { id: "131179581037085745", name: "War" },
+    { id: "131179581037085740", name: "Witch" },
+    { id: "131179581045474389", name: "Zombies" }
+  ];
+  var Formats = [
+    { id: "131179581020308481", name: "Adapted from Anime" },
+    { id: "131179581028697091", name: "Adapted to Anime" },
+    { id: "131179581037085753", name: "Award Winning" },
+    { id: "131179581028697090", name: "Full Color" },
+    { id: "131179581037085760", name: "Long Strip" },
+    { id: "131179581037085762", name: "Oneshot" },
+    { id: "131179581037085761", name: "Web Comic" }
+  ];
+
+  // src/Mangacloud/Mangacloud.ts
+  var DOMAIN = "https://mangacloud.org";
+  var API_DOMAIN = "https://api.mangacloud.org";
+  var MangacloudInfo = {
+    version: "1.0.0",
+    name: "Mangacloud",
+    description: `Extension that pulls content from ${DOMAIN}`,
     author: "Karrot",
     icon: "icon.png",
     contentRating: import_types.ContentRating.EVERYONE,
@@ -740,36 +858,21 @@ var _Sources = (() => {
     intents: import_types.SourceIntents.MANGA_CHAPTERS | import_types.SourceIntents.HOMEPAGE_SECTIONS,
     sourceTags: []
   };
-  function constructImageUrl(imagePath) {
-    if (imagePath.startsWith("http")) {
-      return imagePath;
-    }
-    if (imagePath.startsWith("/static/")) {
-      return `${DOMAIN}${imagePath}`;
-    }
-    if (imagePath.startsWith("/")) {
-      return `${DOMAIN}${imagePath.substring(1)}`;
-    }
-    return `${DOMAIN}/static/${imagePath}`;
-  }
-  var Atsumaru = class {
+  var Mangacloud = class {
     constructor() {
       this.requestManager = App.createRequestManager({
-        requestsPerSecond: 5,
+        requestsPerSecond: 10,
         requestTimeout: 1e4,
         interceptor: {
           interceptRequest: async (request) => {
             request.headers = {
               ...request.headers ?? {},
               ...{
-                "referer": DOMAIN,
+                referer: DOMAIN,
                 "user-agent": await this.requestManager.getDefaultUserAgent(),
-                accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-                "accept-language": "en-US,en;q=0.5",
-                "accept-encoding": "gzip, deflate, br"
+                accept: "*/*"
               }
             };
-            request.url = request.url.replace(/^http:/, "https:");
             return request;
           },
           interceptResponse: async (response) => {
@@ -780,285 +883,258 @@ var _Sources = (() => {
     }
     async getMangaDetails(mangaId) {
       const request = App.createRequest({
-        url: `${DOMAIN}/api/manga/page?id=${mangaId}`,
+        url: `${API_DOMAIN}/comic/${mangaId}`,
         method: "GET"
       });
       const response = await this.requestManager.schedule(request, 1);
-      const data = JSON.parse(response.data);
-      const mangaPage = data.mangaPage;
-      const title = mangaPage.englishTitle || mangaPage.title;
-      const altTitles = mangaPage.otherNames || [];
-      const image = mangaPage.poster?.image;
-      const imageUrl = image ? constructImageUrl(image) : "";
-      const description = mangaPage.synopsis || "";
-      const authors = mangaPage.authors?.map((author) => author.name) || [];
+      const jsonStr = response.data;
+      const resp = JSON.parse(jsonStr);
+      const info = resp.data;
       let status = "UNKNOWN";
-      const statusText = mangaPage.status;
-      if (statusText?.toLowerCase().includes("ongoing")) {
-        status = "ONGOING";
-      } else if (statusText?.toLowerCase().includes("completed")) {
-        status = "COMPLETED";
+      if (info.status === "Ongoing") status = "ONGOING";
+      else if (info.status === "Completed") status = "COMPLETED";
+      const tagGroups = [];
+      if (info.tags && info.tags.length > 0) {
+        tagGroups.push(App.createTagSection({
+          id: "tags",
+          label: "Tags",
+          tags: info.tags.map((t) => App.createTag({ id: t.id, label: t.name }))
+        }));
       }
-      const tags = [];
-      const genres = mangaPage.tags?.map((tag) => tag.name) || [];
-      if (genres.length > 0) {
-        tags.push({
+      const genres = info.tags?.filter((t) => t.type === "genre");
+      if (genres && genres.length > 0) {
+        tagGroups.push(App.createTagSection({
           id: "genres",
           label: "Genres",
-          tags: genres.map((genre) => ({
-            id: genre.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
-            label: genre
-          }))
-        });
-      }
-      if (authors.length > 0) {
-        tags.push({
-          id: "authors",
-          label: "Authors",
-          tags: authors.map((author) => ({
-            id: author.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
-            label: author
-          }))
-        });
+          tags: genres.map((g) => App.createTag({ id: g.id, label: g.name }))
+        }));
       }
       return App.createSourceManga({
         id: mangaId,
         mangaInfo: App.createMangaInfo({
-          titles: [title, ...altTitles],
-          image: imageUrl,
-          desc: description,
+          titles: [info.title, ...info.alt_titles ? [info.alt_titles] : []],
+          image: info.cover ? `https://pika.mangacloud.org/${mangaId}/${info.cover.id}.${info.cover.f}` : "",
+          desc: info.description || "",
           status,
-          rating: 1,
-          // API doesn't provide rating
-          tags,
+          rating: 0,
+          tags: tagGroups,
           hentai: false
         })
       });
     }
-    async getHomePageSections(sectionCallback) {
-      const popularRequest = App.createRequest({
-        url: `${DOMAIN}/api/home/page`,
-        method: "GET"
-      });
-      const popularResponse = await this.requestManager.schedule(popularRequest, 1);
-      const popularData = JSON.parse(popularResponse.data);
-      const homePage = popularData.homePage;
-      const trendingSection = homePage.sections.find((s) => s.type === "slideshow" && s.key === "trending");
-      const popularItems = [];
-      if (trendingSection) {
-        for (const item of trendingSection.items || []) {
-          const mangaId = item.id;
-          const imageUrl = constructImageUrl(item.banner);
-          popularItems.push(App.createPartialSourceManga({
-            mangaId,
-            image: imageUrl,
-            title: item.title,
-            subtitle: void 0
-          }));
-        }
-      }
-      sectionCallback(App.createHomeSection({
-        id: "popular_updates",
-        title: "Popular Updates",
-        type: "singleRowNormal",
-        items: popularItems,
-        containsMoreItems: true
-      }));
-      sectionCallback(App.createHomeSection({
-        id: "trending",
-        title: "Trending",
-        type: "singleRowNormal",
-        items: [],
-        containsMoreItems: true
-      }));
-      sectionCallback(App.createHomeSection({
-        id: "recently_updated",
-        title: "Recently Updated",
-        type: "singleRowNormal",
-        items: [],
-        containsMoreItems: true
-      }));
-    }
-    async getSearchResults(query, metadata) {
-      const page = metadata?.page ?? 1;
-      const collectedIds = metadata?.collectedIds ?? [];
-      if (!query.title) {
-        const apiPage = page - 1;
-        const request2 = App.createRequest({
-          url: `${DOMAIN}/api/infinite/recentlyUpdated?page=${apiPage}`,
-          method: "GET"
-        });
-        const response2 = await this.requestManager.schedule(request2, 1);
-        const data2 = JSON.parse(response2.data);
-        const items2 = [];
-        for (const item of data2.items || []) {
-          const mangaId = item.id;
-          if (collectedIds.includes(mangaId)) continue;
-          collectedIds.push(mangaId);
-          const imageUrl = constructImageUrl(item.image);
-          items2.push(App.createPartialSourceManga({
-            mangaId,
-            image: imageUrl,
-            title: item.title,
-            subtitle: void 0
-          }));
-        }
-        return App.createPagedResults({
-          results: items2,
-          metadata: items2.length > 0 ? { page: page + 1, collectedIds } : void 0
-        });
-      }
-      const searchUrl = `${DOMAIN}/api/search/page?query=${encodeURIComponent(query.title.replace(/\s+/g, "+"))}`;
-      const request = App.createRequest({
-        url: searchUrl,
-        method: "GET"
-      });
-      const response = await this.requestManager.schedule(request, 1);
-      const data = JSON.parse(response.data);
-      const items = [];
-      for (const hit of data.hits || []) {
-        const mangaId = hit.id;
-        if (collectedIds.includes(mangaId)) continue;
-        collectedIds.push(mangaId);
-        const imageUrl = constructImageUrl(hit.image);
-        items.push(App.createPartialSourceManga({
-          mangaId,
-          image: imageUrl,
-          title: hit.title,
-          subtitle: void 0
-        }));
-      }
-      return App.createPagedResults({
-        results: items,
-        metadata: items.length > 0 ? { page: page + 1, collectedIds } : void 0
-      });
-    }
-    async getViewMoreItems(homepageSectionId, metadata) {
-      const page = metadata?.page ?? 1;
-      const collectedIds = metadata?.collectedIds ?? [];
-      if (homepageSectionId === "popular_updates") {
-        const request2 = App.createRequest({
-          url: `${DOMAIN}/api/home/page`,
-          method: "GET"
-        });
-        const response2 = await this.requestManager.schedule(request2, 1);
-        const data2 = JSON.parse(response2.data);
-        const homePage = data2.homePage;
-        const trendingSection = homePage.sections.find((s) => s.type === "slideshow" && s.key === "trending");
-        const items2 = [];
-        if (trendingSection) {
-          for (const item of trendingSection.items || []) {
-            const mangaId = item.id;
-            if (collectedIds.includes(mangaId)) continue;
-            collectedIds.push(mangaId);
-            const imageUrl = constructImageUrl(item.banner);
-            items2.push(App.createPartialSourceManga({
-              mangaId,
-              image: imageUrl,
-              title: item.title,
-              subtitle: void 0
-            }));
-          }
-        }
-        return App.createPagedResults({
-          results: items2,
-          metadata: void 0
-          // No pagination for popular section
-        });
-      }
-      let url;
-      if (homepageSectionId === "trending") {
-        url = `${DOMAIN}/api/infinite/trending?page=${page}`;
-      } else if (homepageSectionId === "recently_updated") {
-        url = `${DOMAIN}/api/infinite/recentlyUpdated?page=${page}`;
-      } else {
-        url = `${DOMAIN}/api/infinite/recentlyUpdated?page=${page}`;
-      }
-      const request = App.createRequest({
-        url,
-        method: "GET"
-      });
-      const response = await this.requestManager.schedule(request, 1);
-      const data = JSON.parse(response.data);
-      const items = [];
-      for (const item of data.items || []) {
-        const mangaId = item.id;
-        if (collectedIds.includes(mangaId)) continue;
-        collectedIds.push(mangaId);
-        const imageUrl = constructImageUrl(item.image);
-        items.push(App.createPartialSourceManga({
-          mangaId,
-          image: imageUrl,
-          title: item.title,
-          subtitle: void 0
-        }));
-      }
-      return App.createPagedResults({
-        results: items,
-        metadata: items.length > 0 ? { page: page + 1, collectedIds } : void 0
-      });
-    }
     async getChapters(mangaId) {
+      const request = App.createRequest({
+        url: `${API_DOMAIN}/comic/${mangaId}`,
+        method: "GET"
+      });
+      const response = await this.requestManager.schedule(request, 1);
+      const jsonStr = response.data;
+      const resp = JSON.parse(jsonStr);
+      const info = resp.data;
       const chapters = [];
-      let currentPage = 0;
-      let totalPages = 1;
-      do {
-        const request = App.createRequest({
-          url: `${DOMAIN}/api/manga/chapters?id=${mangaId}&filter=all&sort=desc&page=${currentPage}`,
-          method: "GET"
-        });
-        try {
-          const response = await this.requestManager.schedule(request, 1);
-          const data = JSON.parse(response.data);
-          if (!data?.chapters?.length) {
-            console.warn(`[chapters] No chapters found on page ${currentPage} for ${mangaId}`);
-            break;
-          }
-          for (const ch of data.chapters) {
-            const stripped = ch.title?.replace(/^Chapter\s*/i, "").trim();
-            const isNumeric = /^\d+$/.test(stripped ?? "");
-            chapters.push(App.createChapter({
-              id: ch.id,
-              chapNum: ch.number ?? 0,
-              volume: 0,
-              name: isNumeric ? void 0 : stripped,
-              // let Paperback generate title if number only
-              time: new Date(ch.createdAt),
-              langCode: "\u{1F1EC}\u{1F1E7}",
-              group: "Default"
-            }));
-          }
-          totalPages = data.pages ?? 1;
-          currentPage++;
-        } catch (err) {
-          console.error(`[chapters] fetchJson error on page ${currentPage}:`, err);
-          break;
+      if (info.chapters && info.chapters.length > 0) {
+        for (const ch of info.chapters) {
+          chapters.push(App.createChapter({
+            id: ch.id,
+            name: ch.name || `${ch.number}`,
+            chapNum: ch.number,
+            time: ch.created_date ? new Date(ch.created_date) : /* @__PURE__ */ new Date(),
+            volume: 0,
+            langCode: "en"
+          }));
         }
-      } while (currentPage <= totalPages);
-      chapters.sort((a, b) => (b.chapNum ?? 0) - (a.chapNum ?? 0));
-      console.log(`[chapters] Loaded ${chapters.length} chapters for ${mangaId} (${totalPages} pages)`);
+      }
       return chapters;
     }
     async getChapterDetails(mangaId, chapterId) {
       const request = App.createRequest({
-        url: `${DOMAIN}/api/read/chapter?mangaId=${mangaId}&chapterId=${chapterId}`,
+        url: `${API_DOMAIN}/chapter/${chapterId}`,
         method: "GET"
       });
       const response = await this.requestManager.schedule(request, 1);
-      const data = JSON.parse(response.data);
-      const pages = data.readChapter.pages.map((page) => {
-        return constructImageUrl(page.image);
-      });
+      const jsonStr = response.data;
+      const resp = JSON.parse(jsonStr);
+      const info = resp.data;
+      const pages = [];
+      if (info.images && info.images.length > 0) {
+        for (const img of info.images) {
+          pages.push(`https://pika.mangacloud.org/${info.comic_id}/${info.id}/${img.id}.${img.f}`);
+        }
+      }
       return App.createChapterDetails({
         id: chapterId,
         mangaId,
         pages
       });
     }
-    getMangaShareUrl(mangaId) {
-      return `${DOMAIN}/title/${mangaId}`;
+    async getHomePageSections(sectionCallback) {
+      sectionCallback(App.createHomeSection({
+        id: "popular_section",
+        title: "Popular",
+        type: "singleRowNormal",
+        items: [],
+        containsMoreItems: true
+      }));
+      sectionCallback(App.createHomeSection({
+        id: "updated_section",
+        title: "Recently Updated",
+        type: "singleRowNormal",
+        items: [],
+        containsMoreItems: true
+      }));
+    }
+    async getViewMoreItems(homepageSectionId, metadata) {
+      const page = metadata?.page ?? 1;
+      const collectedIds = metadata?.collectedIds ?? [];
+      switch (homepageSectionId) {
+        case "popular_section":
+          return this.getPopularSectionItems(page, collectedIds);
+        case "updated_section":
+          return this.getUpdatedSectionItems(page, collectedIds);
+        default:
+          return App.createPagedResults({ results: [] });
+      }
+    }
+    async getPopularSectionItems(page, collectedIds) {
+      let url = `${API_DOMAIN}/comic-popular-view/today`;
+      if (page > 1) url += `?page=${page}`;
+      const request = App.createRequest({ url, method: "GET" });
+      const response = await this.requestManager.schedule(request, 1);
+      const jsonStr = response.data;
+      const resp = JSON.parse(jsonStr);
+      const list = resp.data?.list || [];
+      const items = [];
+      for (const m of list) {
+        if (!m.id || collectedIds.includes(m.id)) continue;
+        collectedIds.push(m.id);
+        items.push(App.createPartialSourceManga({
+          mangaId: m.id,
+          title: m.title,
+          image: m.cover ? `https://pika.mangacloud.org/${m.id}/${m.cover.id}.${m.cover.f}` : "",
+          subtitle: m.number !== void 0 ? `Chapters: ${m.number}` : void 0
+        }));
+      }
+      return App.createPagedResults({
+        results: items,
+        metadata: list.length > 0 ? { page: page + 1, collectedIds } : void 0
+      });
+    }
+    async getUpdatedSectionItems(page, collectedIds) {
+      const request = App.createRequest({
+        url: `${API_DOMAIN}/comic-updates`,
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        data: JSON.stringify({ page })
+      });
+      const response = await this.requestManager.schedule(request, 1);
+      const jsonStr = response.data;
+      const resp = JSON.parse(jsonStr);
+      const list = resp.data?.list || [];
+      const items = [];
+      for (const m of list) {
+        if (!m.id || collectedIds.includes(m.id)) continue;
+        collectedIds.push(m.id);
+        items.push(App.createPartialSourceManga({
+          mangaId: m.id,
+          title: m.title,
+          image: m.cover ? `https://pika.mangacloud.org/${m.id}/${m.cover.id}.${m.cover.f}` : "",
+          subtitle: m.chapters && m.chapters.length > 0 ? `${m.chapters.length} chapters` : void 0
+        }));
+      }
+      return App.createPagedResults({
+        results: items,
+        metadata: list.length > 0 ? { page: page + 1, collectedIds } : void 0
+      });
+    }
+    async getSearchTags() {
+      const tags = [];
+      tags.push(App.createTagSection({
+        id: "type",
+        label: "Type",
+        tags: Types.map((t) => App.createTag({ id: `type-${t.name}`, label: t.name }))
+      }));
+      tags.push(App.createTagSection({
+        id: "status",
+        label: "Status",
+        tags: Statuses.map((s) => App.createTag({ id: `status-${s.id}`, label: s.name }))
+      }));
+      tags.push(App.createTagSection({
+        id: "sort",
+        label: "Sort Options",
+        tags: SortOptions.map((s) => App.createTag({ id: `sort-${s.id}`, label: s.name }))
+      }));
+      tags.push(App.createTagSection({
+        id: "genres",
+        label: "Genres",
+        tags: Genres.map((g) => App.createTag({ id: g.id, label: g.name }))
+      }));
+      tags.push(App.createTagSection({
+        id: "themes",
+        label: "Themes",
+        tags: Themes.map((t) => App.createTag({ id: t.id, label: t.name }))
+      }));
+      tags.push(App.createTagSection({
+        id: "formats",
+        label: "Formats",
+        tags: Formats.map((f) => App.createTag({ id: f.id, label: f.name }))
+      }));
+      return tags;
+    }
+    async getSearchResults(query, metadata) {
+      const page = metadata?.page ?? 1;
+      const body = { page };
+      if (query.title && query.title.trim() !== "") {
+        body.title = query.title;
+      }
+      const includes = [];
+      const excludes = [];
+      for (const tag of query.includedTags ?? []) {
+        if (tag.id.startsWith("type-")) {
+          body.type = tag.id.replace("type-", "");
+        } else if (tag.id.startsWith("status-")) {
+          body.status = tag.id.replace("status-", "");
+        } else if (tag.id.startsWith("sort-")) {
+          body.sort = tag.id.replace("sort-", "");
+        } else {
+          includes.push(tag.id);
+        }
+      }
+      for (const tag of query.excludedTags ?? []) {
+        if (!tag.id.startsWith("type-") && !tag.id.startsWith("status-") && !tag.id.startsWith("sort-")) {
+          excludes.push(tag.id);
+        }
+      }
+      if (!body.sort) {
+        body.sort = "updated_date-DESC";
+      }
+      if (includes.length > 0) body.includes = includes;
+      if (excludes.length > 0) body.excludes = excludes;
+      const request = App.createRequest({
+        url: `${API_DOMAIN}/comic/browse`,
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        data: JSON.stringify(body)
+      });
+      const response = await this.requestManager.schedule(request, 1);
+      const jsonStr = response.data;
+      const resp = JSON.parse(jsonStr);
+      const list = resp.data || [];
+      const items = [];
+      for (const m of list) {
+        if (!m.id) continue;
+        items.push(App.createPartialSourceManga({
+          mangaId: m.id,
+          title: m.title,
+          image: m.cover ? `https://pika.mangacloud.org/${m.id}/${m.cover.id}.${m.cover.f}` : "",
+          subtitle: void 0
+        }));
+      }
+      return App.createPagedResults({
+        results: items,
+        metadata: list.length > 0 ? { page: page + 1, collectedIds: metadata?.collectedIds } : void 0
+      });
     }
   };
-  return __toCommonJS(Atsumaru_exports);
+  return __toCommonJS(Mangacloud_exports);
 })();
 this.Sources = _Sources; if (typeof exports === 'object' && typeof module !== 'undefined') {module.exports.Sources = this.Sources;}
