@@ -15411,67 +15411,50 @@ var _Sources = (() => {
         throw err;
       }
     }
-    async getSearchFilters() {
-      const filters2 = [];
-      filters2.push({
+    async getSearchTags() {
+      const tags = [];
+      tags.push(App.createTagSection({
         id: "nsfw",
-        type: "dropdown",
-        options: [
-          { id: "false", value: "No" },
-          { id: "true", value: "Yes" }
-        ],
-        value: "false",
-        title: "Show 18+ Content"
-      });
-      const searchDetails = STATIC_SEARCH_DETAILS;
-      if (searchDetails?.tagCategories?.length) {
-        for (const cat of searchDetails.tagCategories) {
-          filters2.push({
-            id: `tags_${cat.id}`,
-            type: "multiselect",
-            options: cat.tags.map((t) => ({ id: t.id, value: t.name })),
-            allowExclusion: true,
-            value: {},
-            allowEmptySelection: true,
-            title: cat.label,
-            maximum: void 0
-          });
-        }
+        label: "Show 18+ Content",
+        tags: [
+          App.createTag({ id: "false", label: "No" }),
+          App.createTag({ id: "true", label: "Yes" })
+        ]
+      }));
+      for (const cat of STATIC_SEARCH_DETAILS.tagCategories) {
+        tags.push(App.createTagSection({
+          id: cat.id,
+          label: cat.label,
+          tags: cat.tags.map((t) => App.createTag({ id: t.id, label: t.name }))
+        }));
       }
-      if (searchDetails?.demographics?.length) {
-        filters2.push({
+      tags.push(App.createTagSection({
+        id: "sort",
+        label: "Sort By",
+        tags: STATIC_SEARCH_DETAILS.sortBy.map((s) => App.createTag({ id: s.id, label: s.label }))
+      }));
+      if (STATIC_SEARCH_DETAILS.demographics?.length) {
+        tags.push(App.createTagSection({
           id: "demographics",
-          type: "dropdown",
-          options: searchDetails.demographics.map((d) => ({ id: d.id, value: d.label })),
-          value: "any",
-          title: "Demographic"
-        });
+          label: "Demographics",
+          tags: STATIC_SEARCH_DETAILS.demographics.map((d) => App.createTag({ id: d.id, label: d.label }))
+        }));
       }
-      if (searchDetails?.translatedLanguages?.length) {
-        filters2.push({
+      if (STATIC_SEARCH_DETAILS.translatedLanguages?.length) {
+        tags.push(App.createTagSection({
           id: "translatedLanguages",
-          type: "multiselect",
-          options: searchDetails.translatedLanguages.map((l) => ({ id: l.id, value: l.label })),
-          allowExclusion: false,
-          value: {},
-          allowEmptySelection: true,
-          title: "Translated Languages",
-          maximum: void 0
-        });
+          label: "Translated Languages",
+          tags: STATIC_SEARCH_DETAILS.translatedLanguages.map((l) => App.createTag({ id: l.id, label: l.label }))
+        }));
       }
-      if (searchDetails?.originalLanguages?.length) {
-        filters2.push({
+      if (STATIC_SEARCH_DETAILS.originalLanguages?.length) {
+        tags.push(App.createTagSection({
           id: "originalLanguages",
-          type: "multiselect",
-          options: searchDetails.originalLanguages.map((l) => ({ id: l.id, value: l.label })),
-          allowExclusion: false,
-          value: {},
-          allowEmptySelection: true,
-          title: "Original Languages",
-          maximum: void 0
-        });
+          label: "Original Languages",
+          tags: STATIC_SEARCH_DETAILS.originalLanguages.map((l) => App.createTag({ id: l.id, label: l.label }))
+        }));
       }
-      return filters2;
+      return tags;
     }
     async getViewMoreItems(homepageSectionId, metadata) {
       const page = metadata?.page ?? 1;
@@ -15590,12 +15573,6 @@ var _Sources = (() => {
       const page = metadata?.page ?? 1;
       const collectedIds = metadata?.searchCollectedIds ?? [];
       const nsfw = query.filters?.find((f) => f.id === "nsfw")?.value === "true";
-      if (!query.title) {
-        return App.createPagedResults({
-          results: [],
-          metadata: void 0
-        });
-      }
       const ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36";
       if (!this.csrfReady) {
         await this.initialise();
