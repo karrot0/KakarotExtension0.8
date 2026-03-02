@@ -21,7 +21,7 @@ import * as cheerio from "cheerio";
 const DOMAIN = "https://mangaball.net";
 
 export const MangaballInfo: SourceInfo = {
-    version: '1.0.0-alpha.1',
+    version: '1.0.0-alpha.2',
     name: 'Mangaball',
     description: `Extension that pulls content from ${DOMAIN}`,
     author: 'Karrot',
@@ -466,6 +466,13 @@ export class Mangaball
             sort: "none",
             tag_included_mode: "and",
             tag_excluded_mode: "and",
+            contentRating: "any",
+            demographic: "any",
+            person: "any",
+            originalLanguages: "any",
+            publicationYear: "",
+            publicationStatus: "any",
+            userSettingsEnabled: false,
             page,
         };
         filters["page"] = page;
@@ -474,9 +481,11 @@ export class Mangaball
             `search_input=${encodeURIComponent(query.title)}`,
             ...Object.entries(filters).flatMap(([k, v]) => {
                 if (Array.isArray(v)) {
-                    return v.map((val) => `${encodeURIComponent("filters[" + k + "]")}=${encodeURIComponent(String(val))}`);
+                    return v.map((val) =>
+                        `${encodeURIComponent(`filters[${k}][]`)}=${encodeURIComponent(String(val))}`
+                    );
                 } else {
-                    return `${encodeURIComponent("filters[" + k + "]")}=${encodeURIComponent(String(v))}`;
+                    return `${encodeURIComponent(`filters[${k}]`)}=${encodeURIComponent(String(v))}`;
                 }
             }),
         ].join("&");
