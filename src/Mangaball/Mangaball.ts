@@ -15,6 +15,7 @@ import {
     Chapter,
     HomeSection,
     PartialSourceManga,
+    TagSection,
 } from '@paperback/types';
 
 // reuse static search metadata to build filters
@@ -314,70 +315,64 @@ export class Mangaball
         }
     }
 
-    async getSearchFilters(): Promise<any[]> {
-        const filters: any[] = [];
-        // nsfw toggle first
-        filters.push({
-            id: "nsfw",
-            type: "dropdown",
-            options: [
-                { id: "false", value: "No" },
-                { id: "true", value: "Yes" },
-            ],
-            value: "false",
-            title: "Show 18+ Content",
-        });
 
-        const searchDetails: SearchDetails = STATIC_SEARCH_DETAILS;
-        // tag categories
-        if (searchDetails?.tagCategories?.length) {
-            for (const cat of searchDetails.tagCategories) {
-                filters.push({
-                    id: `tags_${cat.id}`,
-                    type: "multiselect",
-                    options: cat.tags.map((t) => ({ id: t.id, value: t.name })),
-                    allowExclusion: true,
-                    value: {},
-                    allowEmptySelection: true,
-                    title: cat.label,
-                    maximum: undefined,
-                });
-            }
+    async getSearchTags(): Promise<TagSection[]> {
+        const tags: TagSection[] = [];
+
+        // NSFW toggle first
+        tags.push(App.createTagSection({
+            id: "nsfw",
+            label: "Show 18+ Content",
+            tags: [
+                App.createTag({ id: "false", label: "No" }),
+                App.createTag({ id: "true", label: "Yes" })
+            ]
+        }));
+
+        // Tag categories (content, origin, format, genre, theme)
+        for (const cat of STATIC_SEARCH_DETAILS.tagCategories) {
+            tags.push(App.createTagSection({
+                id: cat.id,
+                label: cat.label,
+                tags: cat.tags.map(t => App.createTag({ id: t.id, label: t.name }))
+            }));
         }
-        if (searchDetails?.demographics?.length) {
-            filters.push({
+
+        // Sort options
+        tags.push(App.createTagSection({
+            id: "sort",
+            label: "Sort By",
+            tags: STATIC_SEARCH_DETAILS.sortBy.map(s => App.createTag({ id: s.id, label: s.label }))
+        }));
+
+        // Demographics
+        if (STATIC_SEARCH_DETAILS.demographics?.length) {
+            tags.push(App.createTagSection({
                 id: "demographics",
-                type: "dropdown",
-                options: searchDetails.demographics.map((d) => ({ id: d.id, value: d.label })),
-                value: "any",
-                title: "Demographic",
-            });
+                label: "Demographics",
+                tags: STATIC_SEARCH_DETAILS.demographics.map(d => App.createTag({ id: d.id, label: d.label }))
+            }));
         }
-        if (searchDetails?.translatedLanguages?.length) {
-            filters.push({
+
+        // Translated Languages
+        if (STATIC_SEARCH_DETAILS.translatedLanguages?.length) {
+            tags.push(App.createTagSection({
                 id: "translatedLanguages",
-                type: "multiselect",
-                options: searchDetails.translatedLanguages.map((l) => ({ id: l.id, value: l.label })),
-                allowExclusion: false,
-                value: {},
-                allowEmptySelection: true,
-                title: "Translated Languages",
-                maximum: undefined,
-            });
+                label: "Translated Languages",
+                tags: STATIC_SEARCH_DETAILS.translatedLanguages.map(l => App.createTag({ id: l.id, label: l.label }))
+            }));
         }
-        if (searchDetails?.originalLanguages?.length) {
-            filters.push({
+
+        // Original Languages
+        if (STATIC_SEARCH_DETAILS.originalLanguages?.length) {
+            tags.push(App.createTagSection({
                 id: "originalLanguages",
-                type: "multiselect",
-                options: searchDetails.originalLanguages.map((l) => ({ id: l.id, value: l.label })),
-                allowExclusion: false,
-                value: {},
-                allowEmptySelection: true,
-                title: "Original Languages",
-                maximum: undefined,
-            });
+                label: "Original Languages",
+                tags: STATIC_SEARCH_DETAILS.originalLanguages.map(l => App.createTag({ id: l.id, label: l.label }))
+            }));
         }
-        return filters;
+
+        return tags;
     }
 
     async getViewMoreItems(homepageSectionId: string, metadata: any): Promise<PagedResults> {
@@ -524,15 +519,6 @@ export class Mangaball
 
         // determine if NSFW filter is enabled
         const nsfw = (query as any).filters?.find((f: any) => f.id === "nsfw")?.value === "true";
-
-        // For simplicity, use the search API with title
-        if (!query.title) {
-            // Return empty or default
-            return App.createPagedResults({
-                results: [],
-                metadata: undefined
-            });
-        }
 
         // Use advanced search API
         const ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36";
