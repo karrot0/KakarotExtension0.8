@@ -15,7 +15,10 @@ import {
     Chapter,
     HomeSection,
     PartialSourceManga,
-} from '@paperback/types'
+} from '@paperback/types';
+
+// reuse static search metadata to build filters
+import { SearchDetails, STATIC_SEARCH_DETAILS } from "./model"
 import * as cheerio from "cheerio";
 
 const DOMAIN = "https://mangaball.net";
@@ -128,6 +131,25 @@ export class Mangaball
         requestTimeout: 10000,
         interceptor: {
             interceptRequest: async (request: Request): Promise<Request> => {
+                const enableNsfw = request.headers?.["x-enable-nsfw"] === "true";
+                if (enableNsfw) {
+                    const existingCookie = request.headers?.cookie || "";
+                    const additional = "show18PlusContent=true";
+                    const cookieHeader = existingCookie
+                        ? existingCookie.split(";").some((c) => c.trim().startsWith("show18PlusContent"))
+                            ? existingCookie
+                            : `${existingCookie}; ${additional}`
+                        : additional;
+
+                    request.headers = {
+                        ...(request.headers ?? {}), ...{
+                            cookie: cookieHeader,
+                        },
+                    };
+                }
+                // remove control header
+                if (request.headers) delete request.headers["x-enable-nsfw"];
+
                 request.headers = {
                     ...(request.headers ?? {}), ...{
                         "referer": DOMAIN,
@@ -292,6 +314,72 @@ export class Mangaball
         }
     }
 
+    async getSearchFilters(): Promise<any[]> {
+        const filters: any[] = [];
+        // nsfw toggle first
+        filters.push({
+            id: "nsfw",
+            type: "dropdown",
+            options: [
+                { id: "false", value: "No" },
+                { id: "true", value: "Yes" },
+            ],
+            value: "false",
+            title: "Show 18+ Content",
+        });
+
+        const searchDetails: SearchDetails = STATIC_SEARCH_DETAILS;
+        // tag categories
+        if (searchDetails?.tagCategories?.length) {
+            for (const cat of searchDetails.tagCategories) {
+                filters.push({
+                    id: `tags_${cat.id}`,
+                    type: "multiselect",
+                    options: cat.tags.map((t) => ({ id: t.id, value: t.name })),
+                    allowExclusion: true,
+                    value: {},
+                    allowEmptySelection: true,
+                    title: cat.label,
+                    maximum: undefined,
+                });
+            }
+        }
+        if (searchDetails?.demographics?.length) {
+            filters.push({
+                id: "demographics",
+                type: "dropdown",
+                options: searchDetails.demographics.map((d) => ({ id: d.id, value: d.label })),
+                value: "any",
+                title: "Demographic",
+            });
+        }
+        if (searchDetails?.translatedLanguages?.length) {
+            filters.push({
+                id: "translatedLanguages",
+                type: "multiselect",
+                options: searchDetails.translatedLanguages.map((l) => ({ id: l.id, value: l.label })),
+                allowExclusion: false,
+                value: {},
+                allowEmptySelection: true,
+                title: "Translated Languages",
+                maximum: undefined,
+            });
+        }
+        if (searchDetails?.originalLanguages?.length) {
+            filters.push({
+                id: "originalLanguages",
+                type: "multiselect",
+                options: searchDetails.originalLanguages.map((l) => ({ id: l.id, value: l.label })),
+                allowExclusion: false,
+                value: {},
+                allowEmptySelection: true,
+                title: "Original Languages",
+                maximum: undefined,
+            });
+        }
+        return filters;
+    }
+
     async getViewMoreItems(homepageSectionId: string, metadata: any): Promise<PagedResults> {
         const page: number = metadata?.page ?? 1;
         const collectedIds: string[] = metadata?.collectedIds ?? [];
@@ -434,6 +522,9 @@ export class Mangaball
         const page = metadata?.page ?? 1;
         const collectedIds = metadata?.searchCollectedIds ?? [];
 
+        // determine if NSFW filter is enabled
+        const nsfw = (query as any).filters?.find((f: any) => f.id === "nsfw")?.value === "true";
+
         // For simplicity, use the search API with title
         if (!query.title) {
             // Return empty or default
@@ -458,6 +549,9 @@ export class Mangaball
             "X-Requested-With": "XMLHttpRequest",
             "User-Agent": ua,
         };
+        if (nsfw) {
+            headers["x-enable-nsfw"] = "true";
+        }
         if (this.cachedCsrfToken) headers["X-CSRF-TOKEN"] = this.cachedCsrfToken;
         if (this.cachedXsrfToken) headers["X-XSRF-TOKEN"] = this.cachedXsrfToken;
         if (this.cachedFormToken) headers["x-csrf-token"] = this.cachedFormToken;
