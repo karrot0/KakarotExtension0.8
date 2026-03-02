@@ -14937,7 +14937,7 @@ var _Sources = (() => {
   // src/ReadAllComics/ReadAllComics.ts
   var DOMAIN2 = "https://readallcomics.com";
   var ReadAllComicsInfo = {
-    version: "0.0.2",
+    version: "1.0",
     name: "ReadAllComics",
     description: `Extension that pulls manga from ${DOMAIN2}`,
     author: "Karrot",
@@ -15032,44 +15032,7 @@ var _Sources = (() => {
       const page = metadata?.page ?? 1;
       const searchTerm = query.title ?? "";
       if (!searchTerm.trim()) {
-        const url = page > 1 ? `${DOMAIN2}/page/${page}/` : `${DOMAIN2}`;
-        const request2 = App.createRequest({
-          url,
-          method: "GET"
-        });
-        const response2 = await this.requestManager.schedule(request2, 1);
-        const $3 = load(response2.data);
-        const results2 = [];
-        const newCollectedIds = [...collectedIds];
-        $3("#post-area .post").each((_, element) => {
-          const unit = $3(element);
-          const infoLink = unit.find(".pinbin-copy a");
-          const title = infoLink.attr("title")?.trim() || infoLink.text().trim();
-          const imageEl = unit.find("img");
-          const rawImage = imageEl.attr("data-src") || imageEl.attr("src") || "";
-          const image = rawImage.startsWith("/") ? `https://2.bp.blogspot.com${rawImage}` : rawImage;
-          const rawMangaId = unit.attr("class")?.match(/category-([^\s]+)/)?.[1] ?? "";
-          const mangaId = rawMangaId || "";
-          const dateText = unit.find(".pinbin-copy span").text().trim();
-          if (title && mangaId && !newCollectedIds.includes(mangaId)) {
-            newCollectedIds.push(mangaId);
-            results2.push(App.createPartialSourceManga({
-              mangaId,
-              image,
-              title,
-              subtitle: dateText
-            }));
-          }
-        });
-        const hasNextPage = $3(".next.page-numbers").length > 0;
-        const nextPageMetadata = hasNextPage ? {
-          page: page + 1,
-          collectedIds: newCollectedIds
-        } : void 0;
-        return App.createPagedResults({
-          results: results2,
-          metadata: nextPageMetadata
-        });
+        return await this.getViewMoreItems("catalogue", { page, collectedIds });
       }
       const request = App.createRequest({
         url: `${DOMAIN2}/?story=${searchTerm}&s=&type=comic`,
@@ -15078,19 +15041,27 @@ var _Sources = (() => {
       const response = await this.requestManager.schedule(request, 1);
       const $2 = load(response.data);
       const results = [];
-      $2(".list-story li").each((_, element) => {
+      const newCollectedIds = [...collectedIds];
+      $2(".list-story.categories > li").each((_, element) => {
         const unit = $2(element);
-        const link = unit.find("a");
-        const url = link.attr("href") || "";
-        const title = link.attr("title") || link.text().trim();
-        const urlParts = url.split("/").filter(Boolean);
-        const mangaId = urlParts.includes("category") ? urlParts[urlParts.length - 1] : "";
-        if (title && mangaId && !collectedIds.includes(mangaId)) {
-          collectedIds.push(mangaId);
+        const infoLink = unit.find("a.cat-title");
+        const title = infoLink.text().trim();
+        const imageEl = unit.find("img.book-cover");
+        const rawImage = imageEl.attr("data-src") || imageEl.attr("src") || "";
+        const image = rawImage;
+        const categoryLink = unit.find("a.book-link").attr("href") || "";
+        const mangaIdMatch = categoryLink.match(/category\/([^/]+)\//);
+        const mangaId = mangaIdMatch ? mangaIdMatch[1] : "";
+        const dateText = unit.find(".latest-date").text().replace("Updated:", "").trim();
+        const totalIssues = unit.find(".cat-total-issues").text().trim();
+        const fullSubtitle = totalIssues ? `${dateText} | ${totalIssues}` : dateText;
+        if (title && mangaId && !newCollectedIds.includes(mangaId)) {
+          newCollectedIds.push(mangaId);
           results.push(App.createPartialSourceManga({
             mangaId,
-            image: "",
-            title
+            image,
+            title,
+            subtitle: fullSubtitle
           }));
         }
       });
@@ -15119,30 +15090,38 @@ var _Sources = (() => {
       const results = [];
       const newCollectedIds = [...collectedIds];
       if (homepageSectionId === "catalogue") {
-        $2("#post-area .post").each((_, element) => {
+        $2(".list-story.categories > li").each((_, element) => {
           const unit = $2(element);
-          const infoLink = unit.find(".pinbin-copy a");
-          const title = infoLink.attr("title")?.trim() || infoLink.text().trim();
-          const imageEl = unit.find("img");
-          const rawImage = imageEl.attr("data-src") || imageEl.attr("src") || "";
-          const image = rawImage.startsWith("/") ? `https://2.bp.blogspot.com${rawImage}` : rawImage;
-          const rawMangaId = unit.attr("class")?.match(/category-([^\s]+)/)?.[1] ?? "";
-          const mangaId = rawMangaId || "";
-          const dateText = unit.find(".pinbin-copy span").text().trim();
+          const infoLink = unit.find("a.cat-title");
+          const title = infoLink.text().trim();
+          const imageEl = unit.find("img.book-cover");
+          const rawImage = imageEl.attr("src") || "";
+          const image = rawImage;
+          const categoryLink = unit.find("a.book-link").attr("href") || "";
+          const mangaIdMatch = categoryLink.match(/category\/([^/]+)\//);
+          const mangaId = mangaIdMatch ? mangaIdMatch[1] : "";
+          const dateText = unit.find(".latest-date").text().replace("Updated:", "").trim();
+          const totalIssues = unit.find(".cat-total-issues").text().trim();
+          const fullSubtitle = totalIssues ? `${dateText} | ${totalIssues}` : dateText;
           if (title && mangaId && !newCollectedIds.includes(mangaId)) {
             newCollectedIds.push(mangaId);
             results.push(App.createPartialSourceManga({
               mangaId,
               image,
               title,
-              subtitle: dateText
+              subtitle: fullSubtitle
             }));
           }
         });
       }
       let hasNextPage = false;
       if (homepageSectionId === "catalogue") {
-        hasNextPage = $2(".next.page-numbers").length > 0;
+        $2(".pagination .page-numbers").each((_, element) => {
+          const pageNumber = $2(element).text().trim();
+          if (pageNumber && !isNaN(Number(pageNumber))) {
+            hasNextPage = Number(pageNumber) > page;
+          }
+        });
       }
       metadata = hasNextPage ? {
         page: page + 1,
