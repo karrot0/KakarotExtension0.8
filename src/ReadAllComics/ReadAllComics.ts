@@ -28,7 +28,7 @@ import {
 const DOMAIN = "https://readallcomics.com";
 
 export const ReadAllComicsInfo: SourceInfo = {
-    version: '0.0.2',
+    version: '1.0',
     name: 'ReadAllComics',
     description: `Extension that pulls manga from ${DOMAIN}`,
     author: 'Karrot',
@@ -155,55 +155,9 @@ export class ReadAllComics
         const page: number = metadata?.page ?? 1;
         const searchTerm = query.title ?? "";
         
-        // If search term is empty, use pagination similar to getViewMoreItems
+        // If search term is empty, just return catalogue results (same parsing as viewMore)
         if (!searchTerm.trim()) {
-            const url = page > 1 ? `${DOMAIN}/page/${page}/` : `${DOMAIN}`;
-            
-            const request = App.createRequest({
-                url: url,
-                method: 'GET',
-            });
-
-            const response = await this.requestManager.schedule(request, 1);
-            const $ = cheerio.load(response.data as string);
-
-            const results: PartialSourceManga[] = [];
-            const newCollectedIds = [...collectedIds];
-
-            $("#post-area .post").each((_, element) => {
-                const unit = $(element);
-                const infoLink = unit.find(".pinbin-copy a");
-                const title = infoLink.attr("title")?.trim() || infoLink.text().trim();
-                const imageEl = unit.find("img");
-                const rawImage = imageEl.attr("data-src") || imageEl.attr("src") || "";
-                const image = rawImage.startsWith("/")
-                    ? `https://2.bp.blogspot.com${rawImage}`
-                    : rawImage;
-                const rawMangaId = unit.attr('class')?.match(/category-([^\s]+)/)?.[1] ?? '';
-                const mangaId = rawMangaId || '';
-                const dateText = unit.find(".pinbin-copy span").text().trim();
-
-                if (title && mangaId && !newCollectedIds.includes(mangaId)) {
-                    newCollectedIds.push(mangaId);
-                    results.push(App.createPartialSourceManga({
-                        mangaId: mangaId,
-                        image: image,
-                        title: title,
-                        subtitle: dateText
-                    }));
-                }
-            });
-
-            const hasNextPage = $('.next.page-numbers').length > 0;
-            const nextPageMetadata = hasNextPage ? {
-                page: page + 1,
-                collectedIds: newCollectedIds
-            } : undefined;
-
-            return App.createPagedResults({
-                results: results,
-                metadata: nextPageMetadata
-            });
+            return await this.getViewMoreItems('catalogue', { page, collectedIds });
         }
         
         // Original search logic for when search term is provided
@@ -216,22 +170,32 @@ export class ReadAllComics
         const $ = cheerio.load(response.data as string)
 
         const results: PartialSourceManga[] = []
+        const newCollectedIds = [...collectedIds];
         
-        $(".list-story li").each((_, element) => {
+        $(".list-story.categories > li").each((_, element) => {
             const unit = $(element);
-            const link = unit.find("a");
-            const url = link.attr("href") || "";
-            const title = link.attr("title") || link.text().trim();
+            const infoLink = unit.find("a.cat-title");
+
+            const title = infoLink.text().trim();
+            const imageEl = unit.find("img.book-cover");
+            const rawImage = imageEl.attr("data-src") || imageEl.attr("src") || "";
+            const image = rawImage;
+            const categoryLink = unit.find("a.book-link").attr("href") || "";
+
+            const mangaIdMatch = categoryLink.match(/category\/([^/]+)\//);
+            const mangaId = mangaIdMatch ? mangaIdMatch[1] : "";
+
+            const dateText = unit.find(".latest-date").text().replace("Updated:", "").trim();
+            const totalIssues = unit.find(".cat-total-issues").text().trim();
+            const fullSubtitle = totalIssues ? `${dateText} | ${totalIssues}` : dateText;
             
-            const urlParts = url.split('/').filter(Boolean);
-            const mangaId = urlParts.includes('category') ? urlParts[urlParts.length - 1] : '';
-            
-            if (title && mangaId && !collectedIds.includes(mangaId)) {
-                collectedIds.push(mangaId);
+            if (title && mangaId && !newCollectedIds.includes(mangaId)) {
+                newCollectedIds.push(mangaId);
                 results.push(App.createPartialSourceManga({
                     mangaId: mangaId,
-                    image: '',
-                    title: title
+                    image: image,
+                    title: title,
+                    subtitle: fullSubtitle
                 }));
             }
         });
@@ -268,18 +232,22 @@ export class ReadAllComics
         const newCollectedIds = [...collectedIds]
 
         if (homepageSectionId === 'catalogue') {
-            $("#post-area .post").each((_, element) => {
+            $(".list-story.categories > li").each((_, element) => {
                 const unit = $(element);
-                const infoLink = unit.find(".pinbin-copy a");
-                const title = infoLink.attr("title")?.trim() || infoLink.text().trim();
-                const imageEl = unit.find("img");
-                const rawImage = imageEl.attr("data-src") || imageEl.attr("src") || "";
-                const image = rawImage.startsWith("/")
-                    ? `https://2.bp.blogspot.com${rawImage}`
-                    : rawImage;
-                const rawMangaId = unit.attr('class')?.match(/category-([^\s]+)/)?.[1] ?? '';
-                const mangaId = rawMangaId || '';
-                const dateText = unit.find(".pinbin-copy span").text().trim();
+                const infoLink = unit.find("a.cat-title");
+
+                const title = infoLink.text().trim();
+                const imageEl = unit.find("img.book-cover");
+                const rawImage = imageEl.attr("src") || "";
+                const image = rawImage;
+                const categoryLink = unit.find("a.book-link").attr("href") || "";
+
+                const mangaIdMatch = categoryLink.match(/category\/([^/]+)\//);
+                const mangaId = mangaIdMatch ? mangaIdMatch[1] : "";
+
+                const dateText = unit.find(".latest-date").text().replace("Updated:", "").trim();
+                const totalIssues = unit.find(".cat-total-issues").text().trim();
+                const fullSubtitle = totalIssues ? `${dateText} | ${totalIssues}` : dateText;
 
                 if (title && mangaId && !newCollectedIds.includes(mangaId)) {
                     newCollectedIds.push(mangaId);
@@ -287,7 +255,7 @@ export class ReadAllComics
                         mangaId: mangaId,
                         image: image,
                         title: title,
-                        subtitle: dateText
+                        subtitle: fullSubtitle
                     }));
                 }
             });
@@ -296,7 +264,12 @@ export class ReadAllComics
         let hasNextPage = false;
         
         if (homepageSectionId === 'catalogue') {
-            hasNextPage = $('.next.page-numbers').length > 0;
+            $(".pagination .page-numbers").each((_, element) => {
+                const pageNumber = $(element).text().trim();
+                if (pageNumber && !isNaN(Number(pageNumber))) {
+                    hasNextPage = Number(pageNumber) > page;
+                }
+            });
         }
 
         metadata = hasNextPage ? {
