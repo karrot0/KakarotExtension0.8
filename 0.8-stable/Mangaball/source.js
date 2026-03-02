@@ -14889,7 +14889,7 @@ var _Sources = (() => {
   // src/Mangaball/Mangaball.ts
   var DOMAIN = "https://mangaball.net";
   var MangaballInfo = {
-    version: "1.0.0-alpha.1",
+    version: "1.0.0-alpha.2",
     name: "Mangaball",
     description: `Extension that pulls content from ${DOMAIN}`,
     author: "Karrot",
@@ -15229,6 +15229,13 @@ var _Sources = (() => {
         sort: "none",
         tag_included_mode: "and",
         tag_excluded_mode: "and",
+        contentRating: "any",
+        demographic: "any",
+        person: "any",
+        originalLanguages: "any",
+        publicationYear: "",
+        publicationStatus: "any",
+        userSettingsEnabled: false,
         page
       };
       filters2["page"] = page;
@@ -15236,9 +15243,11 @@ var _Sources = (() => {
         `search_input=${encodeURIComponent(query.title)}`,
         ...Object.entries(filters2).flatMap(([k, v]) => {
           if (Array.isArray(v)) {
-            return v.map((val2) => `${encodeURIComponent("filters[" + k + "]")}=${encodeURIComponent(String(val2))}`);
+            return v.map(
+              (val2) => `${encodeURIComponent(`filters[${k}][]`)}=${encodeURIComponent(String(val2))}`
+            );
           } else {
-            return `${encodeURIComponent("filters[" + k + "]")}=${encodeURIComponent(String(v))}`;
+            return `${encodeURIComponent(`filters[${k}]`)}=${encodeURIComponent(String(v))}`;
           }
         })
       ].join("&");
