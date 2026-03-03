@@ -296,11 +296,7 @@ export class Mangaball
     ): Promise<SearchAPIResponse> {
         const bodyParams: Record<string, string | number | undefined> = { search_type };
         if (search_limit !== undefined) bodyParams.search_limit = search_limit;
-        if (!this.csrfReady) {
-            await this.fetchCsrf(true);
-            if (!this.csrfReady) throw new Error("CSRF/cookie fetch failed, Please try again.");
-        }
-        
+
         await this.fetchCsrf(true);
 
         const headers: Record<string, string> = {
@@ -538,14 +534,9 @@ export class Mangaball
 
         // determine if NSFW filter is enabled
         const nsfw = (query as any).filters?.find((f: any) => f.id === "nsfw")?.value === "true";
-
-        // Use advanced search API
-        if (!this.csrfReady) {
-            await this.fetchCsrf(true);
-            if (!this.csrfReady) throw new Error("CSRF/cookie fetch failed, Please try again.");
-        }
         
         await this.fetchCsrf(true);
+        
         const headers: Record<string, string> = {
             Accept: "*/*",
             "Accept-Language": "en-US,en;q=0.9",
