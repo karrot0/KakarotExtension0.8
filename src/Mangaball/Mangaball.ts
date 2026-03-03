@@ -25,7 +25,7 @@ import * as cheerio from "cheerio";
 const DOMAIN = "https://mangaball.net";
 
 export const MangaballInfo: SourceInfo = {
-    version: '1.0.0-alpha.2',
+    version: '1.0.0-alpha.3',
     name: 'Mangaball',
     description: `Extension that pulls content from ${DOMAIN}`,
     author: 'Karrot',
