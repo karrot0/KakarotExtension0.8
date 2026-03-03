@@ -15384,10 +15384,6 @@ var _Sources = (() => {
     async searchAPI(search_type, search_limit) {
       const bodyParams = { search_type };
       if (search_limit !== void 0) bodyParams.search_limit = search_limit;
-      if (!this.csrfReady) {
-        await this.fetchCsrf(true);
-        if (!this.csrfReady) throw new Error("CSRF/cookie fetch failed, Please try again.");
-      }
       await this.fetchCsrf(true);
       const headers = {
         Accept: "*/*",
@@ -15587,10 +15583,6 @@ var _Sources = (() => {
       const page = metadata?.page ?? 1;
       const collectedIds = metadata?.searchCollectedIds ?? [];
       const nsfw = query.filters?.find((f) => f.id === "nsfw")?.value === "true";
-      if (!this.csrfReady) {
-        await this.fetchCsrf(true);
-        if (!this.csrfReady) throw new Error("CSRF/cookie fetch failed, Please try again.");
-      }
       await this.fetchCsrf(true);
       const headers = {
         Accept: "*/*",
