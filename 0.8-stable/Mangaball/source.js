@@ -15201,14 +15201,14 @@ var _Sources = (() => {
   // src/Mangaball/Mangaball.ts
   var DOMAIN = "https://mangaball.net";
   var MangaballInfo = {
-    version: "1.0.0-alpha.2",
+    version: "1.0.0-alpha.3",
     name: "Mangaball",
     description: `Extension that pulls content from ${DOMAIN}`,
     author: "Karrot",
     icon: "icon.png",
     contentRating: import_types2.ContentRating.ADULT,
     websiteBaseURL: DOMAIN,
-    intents: import_types2.SourceIntents.MANGA_CHAPTERS | import_types2.SourceIntents.HOMEPAGE_SECTIONS,
+    intents: import_types2.SourceIntents.MANGA_CHAPTERS | import_types2.SourceIntents.HOMEPAGE_SECTIONS | import_types2.SourceIntents.CLOUDFLARE_BYPASS_REQUIRED,
     sourceTags: []
   };
   function constructUrl(path) {
@@ -15293,19 +15293,32 @@ var _Sources = (() => {
       });
       this.csrfReady = false;
     }
-    async initialise() {
+    async checkCloudflareStatus(status) {
+      switch (status) {
+        case 503:
+        case 403:
+        case 404:
+          throw new Error("Content not found");
+      }
+    }
+    async fetchCsrf(throwOnCF = false) {
       try {
-        const ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36";
         const request = App.createRequest({
           url: DOMAIN,
           method: "GET",
           headers: {
             Accept: "*/*",
             "Accept-Language": "en-US,en;q=0.9",
-            "User-Agent": ua
+            "User-Agent": await this.requestManager.getDefaultUserAgent()
           }
         });
         const response = await this.requestManager.schedule(request, 1);
+        if (throwOnCF || response.status !== 503 && response.status !== 403) {
+          await this.checkCloudflareStatus(response.status);
+        } else if (response.status === 503 || response.status === 403) {
+          this.csrfReady = false;
+          return;
+        }
         const html3 = response.data;
         const $2 = load(html3);
         const metaToken = ($2('meta[name="csrf-token"]').attr("content") || "").trim();
@@ -15371,19 +15384,19 @@ var _Sources = (() => {
     async searchAPI(search_type, search_limit) {
       const bodyParams = { search_type };
       if (search_limit !== void 0) bodyParams.search_limit = search_limit;
-      const ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36";
       if (!this.csrfReady) {
-        await this.initialise();
-        if (!this.csrfReady) throw new Error("CSRF/cookie fetch failed");
+        await this.fetchCsrf(true);
+        if (!this.csrfReady) throw new Error("CSRF/cookie fetch failed, Please try again.");
       }
+      await this.fetchCsrf(true);
       const headers = {
         Accept: "*/*",
         "Accept-Language": "en-US,en;q=0.9",
         "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
         Origin: DOMAIN.replace(/\/$/, ""),
-        Referer: DOMAIN,
+        Referer: DOMAIN + "/search-advanced",
         "X-Requested-With": "XMLHttpRequest",
-        "User-Agent": ua
+        "user-agent": await this.requestManager.getDefaultUserAgent()
       };
       if (this.cachedCsrfToken) {
         headers["X-CSRF-TOKEN"] = this.cachedCsrfToken;
@@ -15404,6 +15417,7 @@ var _Sources = (() => {
       });
       try {
         const response = await this.requestManager.schedule(request, 1);
+        await this.checkCloudflareStatus(response.status);
         const jsonStr = response.data;
         const responseData = JSON.parse(jsonStr);
         return responseData;
@@ -15573,19 +15587,19 @@ var _Sources = (() => {
       const page = metadata?.page ?? 1;
       const collectedIds = metadata?.searchCollectedIds ?? [];
       const nsfw = query.filters?.find((f) => f.id === "nsfw")?.value === "true";
-      const ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36";
       if (!this.csrfReady) {
-        await this.initialise();
-        if (!this.csrfReady) throw new Error("CSRF/cookie fetch failed");
+        await this.fetchCsrf(true);
+        if (!this.csrfReady) throw new Error("CSRF/cookie fetch failed, Please try again.");
       }
+      await this.fetchCsrf(true);
       const headers = {
         Accept: "*/*",
         "Accept-Language": "en-US,en;q=0.9",
         "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
         Origin: DOMAIN.replace(/\/$/, ""),
-        Referer: constructUrl("/search-advanced"),
+        Referer: DOMAIN + "/search-advanced",
         "X-Requested-With": "XMLHttpRequest",
-        "User-Agent": ua
+        "user-agent": await this.requestManager.getDefaultUserAgent()
       };
       if (nsfw) {
         headers["x-enable-nsfw"] = "true";
@@ -15608,7 +15622,7 @@ var _Sources = (() => {
       };
       filters2["page"] = page;
       const formBody = [
-        `search_input=${encodeURIComponent(query.title)}`,
+        `search_input=${encodeURIComponent(query.title || "")}`,
         ...Object.entries(filters2).flatMap(([k, v]) => {
           if (Array.isArray(v)) {
             return v.map(
@@ -15628,6 +15642,7 @@ var _Sources = (() => {
       });
       try {
         const response = await this.requestManager.schedule(request, 1);
+        await this.checkCloudflareStatus(response.status);
         const jsonStr = response.data;
         const responseData = JSON.parse(jsonStr);
         const searchResults = [];
@@ -15661,6 +15676,7 @@ var _Sources = (() => {
         method: "GET"
       });
       const response = await this.requestManager.schedule(request, 1);
+      await this.checkCloudflareStatus(response.status);
       const $2 = load(response.data);
       const titleHeader = $2(".comic-detail-card .mb-2").first();
       const title = titleHeader.find("h6, .comic-title").first().text().trim() || "";
@@ -15756,6 +15772,7 @@ var _Sources = (() => {
         data: body
       });
       const response = await this.requestManager.schedule(request, 1);
+      await this.checkCloudflareStatus(response.status);
       const json = JSON.parse(response.data);
       const chapters = [];
       const seen = /* @__PURE__ */ new Set();
@@ -15782,6 +15799,7 @@ var _Sources = (() => {
         method: "GET"
       });
       const response = await this.requestManager.schedule(request, 1);
+      await this.checkCloudflareStatus(response.status);
       const $2 = load(response.data);
       const pages = [];
       const script = $2("script").filter((_, el) => {
@@ -15804,6 +15822,17 @@ var _Sources = (() => {
         id: chapterId,
         mangaId,
         pages
+      });
+    }
+    async getCloudflareBypassRequestAsync() {
+      return App.createRequest({
+        url: DOMAIN,
+        method: "GET",
+        headers: {
+          "referer": DOMAIN,
+          "origin": DOMAIN,
+          "user-agent": await this.requestManager.getDefaultUserAgent()
+        }
       });
     }
     getMangaShareUrl(mangaId) {
