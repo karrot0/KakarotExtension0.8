@@ -14937,7 +14937,7 @@ var _Sources = (() => {
   // src/ReadAllComics/ReadAllComics.ts
   var DOMAIN2 = "https://readallcomics.com";
   var ReadAllComicsInfo = {
-    version: "1.0",
+    version: "1.1",
     name: "ReadAllComics",
     description: `Extension that pulls manga from ${DOMAIN2}`,
     author: "Karrot",
@@ -15070,6 +15070,20 @@ var _Sources = (() => {
         metadata: void 0
       });
     }
+    async getMangaIdFromChapter(chapterId) {
+      const request = App.createRequest({
+        url: `${DOMAIN2}/${chapterId}`,
+        method: "GET"
+      });
+      const response = await this.requestManager.schedule(request, 1);
+      const $2 = load(response.data);
+      const categoryHref = $2(".pinbin-category a[href*='/category/']").attr("href") || "";
+      const mangaId = categoryHref.split("/").filter(Boolean).pop();
+      if (!mangaId) {
+        throw new Error("Manga ID not found");
+      }
+      return mangaId;
+    }
     async getViewMoreItems(homepageSectionId, metadata) {
       const page = metadata?.page ?? 1;
       const collectedIds = metadata?.collectedIds ?? [];
@@ -15090,19 +15104,20 @@ var _Sources = (() => {
       const results = [];
       const newCollectedIds = [...collectedIds];
       if (homepageSectionId === "catalogue") {
-        $2(".list-story.categories > li").each((_, element) => {
+        for (const element of $2(".posts-grid > article.post-item").toArray()) {
           const unit = $2(element);
-          const infoLink = unit.find("a.cat-title");
-          const title = infoLink.text().trim();
-          const imageEl = unit.find("img.book-cover");
-          const rawImage = imageEl.attr("src") || "";
-          const image = rawImage;
-          const categoryLink = unit.find("a.book-link").attr("href") || "";
-          const mangaIdMatch = categoryLink.match(/category\/([^/]+)\//);
-          const mangaId = mangaIdMatch ? mangaIdMatch[1] : "";
-          const dateText = unit.find(".latest-date").text().replace("Updated:", "").trim();
-          const totalIssues = unit.find(".cat-total-issues").text().trim();
-          const fullSubtitle = totalIssues ? `${dateText} | ${totalIssues}` : dateText;
+          const linkEl = unit.find(".post-thumbnail a");
+          const imageEl = unit.find(".post-thumbnail img");
+          const titleEl = unit.find(".post-title a");
+          const dateEl = unit.find(".post-date");
+          const title = titleEl.text().trim();
+          const image = imageEl.attr("src") || "";
+          const postUrl = linkEl.attr("href") || "";
+          const chapterId = postUrl.match(/readallcomics\.com\/([^/]+)\/?/);
+          const chapterIdMatch = chapterId ? chapterId[1] : "";
+          const mangaId = await this.getMangaIdFromChapter(chapterIdMatch);
+          const dateText = dateEl.text().trim();
+          const fullSubtitle = dateText;
           if (title && mangaId && !newCollectedIds.includes(mangaId)) {
             newCollectedIds.push(mangaId);
             results.push(App.createPartialSourceManga({
@@ -15112,7 +15127,7 @@ var _Sources = (() => {
               subtitle: fullSubtitle
             }));
           }
-        });
+        }
       }
       let hasNextPage = false;
       if (homepageSectionId === "catalogue") {
