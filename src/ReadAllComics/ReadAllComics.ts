@@ -28,7 +28,7 @@ import {
 const DOMAIN = "https://readallcomics.com";
 
 export const ReadAllComicsInfo: SourceInfo = {
-    version: '1.0',
+    version: '1.1',
     name: 'ReadAllComics',
     description: `Extension that pulls manga from ${DOMAIN}`,
     author: 'Karrot',
@@ -206,6 +206,25 @@ export class ReadAllComics
         });
     }
 
+    private async getMangaIdFromChapter(chapterId: string): Promise<string> {
+        const request = App.createRequest({
+            url: `${DOMAIN}/${chapterId}`,
+            method: "GET",
+        });
+
+        const response = await this.requestManager.schedule(request, 1);
+        const $ = cheerio.load(response.data as string);
+
+        const categoryHref = $(".pinbin-category a[href*='/category/']").attr("href") || "";
+        const mangaId = categoryHref.split("/").filter(Boolean).pop();
+
+        if (!mangaId) {
+        throw new Error("Manga ID not found");
+        }
+
+        return mangaId;
+    }
+
     async getViewMoreItems(homepageSectionId: string, metadata: any): Promise<PagedResults> {
         const page: number = metadata?.page ?? 1;
         const collectedIds: string[] = metadata?.collectedIds ?? [];
@@ -232,22 +251,23 @@ export class ReadAllComics
         const newCollectedIds = [...collectedIds]
 
         if (homepageSectionId === 'catalogue') {
-            $(".list-story.categories > li").each((_, element) => {
+            for (const element of $(".posts-grid > article.post-item").toArray()) {
                 const unit = $(element);
-                const infoLink = unit.find("a.cat-title");
+                const linkEl = unit.find(".post-thumbnail a");
+                const imageEl = unit.find(".post-thumbnail img");
+                const titleEl = unit.find(".post-title a");
+                const dateEl = unit.find(".post-date");
 
-                const title = infoLink.text().trim();
-                const imageEl = unit.find("img.book-cover");
-                const rawImage = imageEl.attr("src") || "";
-                const image = rawImage;
-                const categoryLink = unit.find("a.book-link").attr("href") || "";
+                const title = titleEl.text().trim();
+                const image = imageEl.attr("src") || "";
+                const postUrl = linkEl.attr("href") || "";
+                // ChapterId: extract from URL, e.g. https://readallcomics.com/valiant-beyond-tales-of-the-shadowman-006-ghosts-of-the-bayou-part-3-of-3-2026/ => valiant-beyond-tales-of-the-shadowman-006-ghosts-of-the-bayou-part-3-of-3-2026
+                const chapterId = postUrl.match(/readallcomics\.com\/([^/]+)\/?/);
+                const chapterIdMatch = chapterId ? chapterId[1] : "";
+                const mangaId = await this.getMangaIdFromChapter(chapterIdMatch);
 
-                const mangaIdMatch = categoryLink.match(/category\/([^/]+)\//);
-                const mangaId = mangaIdMatch ? mangaIdMatch[1] : "";
-
-                const dateText = unit.find(".latest-date").text().replace("Updated:", "").trim();
-                const totalIssues = unit.find(".cat-total-issues").text().trim();
-                const fullSubtitle = totalIssues ? `${dateText} | ${totalIssues}` : dateText;
+                const dateText = dateEl.text().trim();
+                const fullSubtitle = dateText;
 
                 if (title && mangaId && !newCollectedIds.includes(mangaId)) {
                     newCollectedIds.push(mangaId);
@@ -258,7 +278,7 @@ export class ReadAllComics
                         subtitle: fullSubtitle
                     }));
                 }
-            });
+            }
         }
 
         let hasNextPage = false;
