@@ -848,14 +848,14 @@ var _Sources = (() => {
   var DOMAIN = "https://mangacloud.org";
   var API_DOMAIN = "https://api.mangacloud.org";
   var MangacloudInfo = {
-    version: "1.0.0",
+    version: "1.0.1",
     name: "Mangacloud",
     description: `Extension that pulls content from ${DOMAIN}`,
     author: "Karrot",
     icon: "icon.png",
     contentRating: import_types.ContentRating.EVERYONE,
     websiteBaseURL: DOMAIN,
-    intents: import_types.SourceIntents.MANGA_CHAPTERS | import_types.SourceIntents.HOMEPAGE_SECTIONS,
+    intents: import_types.SourceIntents.MANGA_CHAPTERS | import_types.SourceIntents.HOMEPAGE_SECTIONS | import_types.SourceIntents.CLOUDFLARE_BYPASS_PROVIDING,
     sourceTags: []
   };
   var Mangacloud = class {
@@ -1132,6 +1132,17 @@ var _Sources = (() => {
       return App.createPagedResults({
         results: items,
         metadata: list.length > 0 ? { page: page + 1, collectedIds: metadata?.collectedIds } : void 0
+      });
+    }
+    async getCloudflareBypassRequestAsync() {
+      return App.createRequest({
+        url: DOMAIN,
+        method: "GET",
+        headers: {
+          referer: DOMAIN,
+          origin: DOMAIN,
+          "user-agent": await this.requestManager.getDefaultUserAgent()
+        }
       });
     }
   };
