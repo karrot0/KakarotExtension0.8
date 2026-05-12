@@ -2,22 +2,6 @@
 
 A Paperback extension that provides access to various manga sources.
 
-## Available Sources
-
-### BatCave
-
-BatCave is a manga source that provides access to a large collection of manga titles.
-
-#### Features
-- Popular manga section with ratings
-- High quality manga images
-- Detailed manga information
-
-#### Usage
-1. Install the extension through Paperback
-2. Browse the "Popular" section to discover top-rated manga
-3. Use the search functionality to find specific titles
-
 ## Installation
 
 1. Open Paperback app
@@ -32,13 +16,15 @@ This extension is built for the Paperback app using TypeScript. Contributions ar
 ### Building from Source
 ```bash
 # Clone the repository
-git clone https://github.com/karrot0/KakarotExtension0.8.git
+git clone https://github.com/karrot0/kakarotextension0.8.git
 
 # Install dependencies
 npm install
 
-# Build the extension
-npm run build
+# serve the extension
+npm run serve
+
+# add repo to paperback using your public or local ip.
 ```
 
 ## License
