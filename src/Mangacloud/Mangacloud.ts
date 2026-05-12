@@ -1,5 +1,6 @@
 import {
   ChapterProviding,
+  CloudflareBypassProviding,
   ContentRating,
   HomePageSectionsProviding,
   MangaProviding,
@@ -38,7 +39,7 @@ const DOMAIN = "https://mangacloud.org";
 const API_DOMAIN = "https://api.mangacloud.org";
 
 export const MangacloudInfo: SourceInfo = {
-  version: "1.0.0",
+  version: "1.0.1",
   name: "Mangacloud",
   description: `Extension that pulls content from ${DOMAIN}`,
   author: "Karrot",
@@ -47,13 +48,15 @@ export const MangacloudInfo: SourceInfo = {
   websiteBaseURL: DOMAIN,
   intents:
     SourceIntents.MANGA_CHAPTERS |
-    SourceIntents.HOMEPAGE_SECTIONS,
+    SourceIntents.HOMEPAGE_SECTIONS |
+    SourceIntents.CLOUDFLARE_BYPASS_PROVIDING,
   sourceTags: []
 };
 
 export class Mangacloud
   implements
     ChapterProviding,
+    CloudflareBypassRequestProviding,
     HomePageSectionsProviding,
     MangaProviding,
     SearchResultsProviding
@@ -378,5 +381,17 @@ export class Mangacloud
       results: items,
       metadata: list.length > 0 ? { page: page + 1, collectedIds: metadata?.collectedIds } : undefined
     });
+  }
+  
+  async getCloudflareBypassRequestAsync(): Promise<Request> {
+    return App.createRequest({
+			url: DOMAIN,
+			method: "GET",
+			headers: {
+        referer: DOMAIN,
+        origin: DOMAIN,
+        "user-agent": await this.requestManager.getDefaultUserAgent()
+      }
+    })
   }
 }
