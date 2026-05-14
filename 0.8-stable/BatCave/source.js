@@ -15000,14 +15000,14 @@ var _Sources = (() => {
   // src/BatCave/BatCave.ts
   var DOMAIN2 = "https://batcave.biz";
   var BatCaveInfo = {
-    version: "0.0.7",
+    version: "0.0.8",
     name: "BatCave",
     description: `Extension that pulls manga from ${DOMAIN2}`,
     author: "Karrot",
     icon: "icon.png",
     contentRating: import_types3.ContentRating.MATURE,
     websiteBaseURL: DOMAIN2,
-    intents: import_types3.SourceIntents.MANGA_CHAPTERS | import_types3.SourceIntents.HOMEPAGE_SECTIONS,
+    intents: import_types3.SourceIntents.MANGA_CHAPTERS | import_types3.SourceIntents.HOMEPAGE_SECTIONS | import_types3.SourceIntents.CLOUDFLARE_BYPASS_REQUIRED,
     sourceTags: []
   };
   var BatCave = class {
@@ -15311,6 +15311,17 @@ var _Sources = (() => {
         id: chapterId,
         mangaId,
         pages
+      });
+    }
+    async getCloudflareBypassRequestAsync() {
+      return App.createRequest({
+        url: DOMAIN2,
+        method: "GET",
+        headers: {
+          referer: DOMAIN2,
+          origin: DOMAIN2,
+          "user-agent": await this.requestManager.getDefaultUserAgent()
+        }
       });
     }
     getMangaShareUrl(mangaId) {
