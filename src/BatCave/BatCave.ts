@@ -1,5 +1,6 @@
 import {
     ChapterProviding,
+    CloudflareBypassRequestProviding,
     ContentRating,
     HomePageSectionsProviding,
     MangaProviding,
@@ -27,7 +28,7 @@ import {
 const DOMAIN = "https://batcave.biz";
 
 export const BatCaveInfo: SourceInfo = {
-    version: '0.0.7',
+    version: '0.0.8',
     name: 'BatCave',
     description: `Extension that pulls manga from ${DOMAIN}`,
     author: 'Karrot',
@@ -36,13 +37,15 @@ export const BatCaveInfo: SourceInfo = {
     websiteBaseURL: DOMAIN,
     intents:
         SourceIntents.MANGA_CHAPTERS |
-        SourceIntents.HOMEPAGE_SECTIONS,
+        SourceIntents.HOMEPAGE_SECTIONS |
+        SourceIntents.CLOUDFLARE_BYPASS_REQUIRED,
     sourceTags: []
 }
 
 export class BatCave
     implements
         ChapterProviding,
+        CloudflareBypassRequestProviding,
         HomePageSectionsProviding,
         MangaProviding,
         SearchResultsProviding
@@ -473,6 +476,18 @@ export class BatCave
             id: chapterId,
             mangaId: mangaId,
             pages: pages,
+        })
+    }
+
+    async getCloudflareBypassRequestAsync(): Promise<Request> {
+        return App.createRequest({
+            url: DOMAIN,
+            method: 'GET',
+            headers: {
+                referer: DOMAIN,
+                origin: DOMAIN,
+                'user-agent': await this.requestManager.getDefaultUserAgent()
+            }
         })
     }
 
