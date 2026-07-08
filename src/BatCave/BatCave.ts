@@ -28,7 +28,7 @@ import {
 const DOMAIN = "https://batcave.biz";
 
 export const BatCaveInfo: SourceInfo = {
-    version: '0.0.8',
+    version: '0.0.9',
     name: 'BatCave',
     description: `Extension that pulls manga from ${DOMAIN}`,
     author: 'Karrot',
@@ -163,7 +163,7 @@ export class BatCave
         const collectedIds: string[] = metadata?.collectedIds ?? [];
 
         const searchTerm = query.title ?? "";
-        
+
         let url: string;
         if (searchTerm.trim() === "") {
             url = page > 1 ? `${DOMAIN}/comix/page/${page}/` : `${DOMAIN}/comix/`;
@@ -171,7 +171,7 @@ export class BatCave
             const encodedSearchTerm = encodeURIComponent(searchTerm);
             url = `${DOMAIN}/search/${encodedSearchTerm}/page/${page}/`;
         }
-        
+
         const request = App.createRequest({
             url: url,
             method: 'GET',
@@ -182,7 +182,7 @@ export class BatCave
 
         const results: PartialSourceManga[] = []
         const newCollectedIds = [...collectedIds];
-        
+
         if (searchTerm.trim() === "") {
             $("#dle-content .readed").each((_, element) => {
                 const unit = $(element);
@@ -206,7 +206,7 @@ export class BatCave
                 const latestChapter = latestChapterText
                     .replace(/Last issue:/, "")
                     .trim();
-                
+
                 if (!mangaId || newCollectedIds.includes(mangaId)) return;
                 newCollectedIds.push(mangaId);
 
@@ -231,7 +231,7 @@ export class BatCave
                     ?.replace(/^https?:\/\/batcave\.biz\//, "")
                     .replace(/\.html$/, "")
                     .trim();
-                
+
                 const latestChapterText = unit
                     .find(".readed__info li:last-child")
                     .text()
@@ -274,7 +274,7 @@ export class BatCave
         const collectedIds: string[] = metadata?.collectedIds ?? [];
 
         let url: string;
-        
+
         switch (homepageSectionId) {
             case 'catalogue':
                 url = page > 1 ? `${DOMAIN}/comix/page/${page}/` : `${DOMAIN}/comix/`;
@@ -285,7 +285,7 @@ export class BatCave
             default:
                 throw new Error(`Unsupported section ID: ${homepageSectionId}`);
         }
-        
+
         const request = App.createRequest({
             url: url,
             method: 'GET',
@@ -367,7 +367,7 @@ export class BatCave
         }
 
         let hasNextPage = false;
-        
+
         if (homepageSectionId === 'newComics') {
             hasNextPage = $(".sect--latest .more-comics, .pagination a:contains('»'), .pagination__btn-loader a").length > 0;
         } else {
@@ -443,34 +443,22 @@ export class BatCave
     }
 
     async getChapterDetails(mangaId: string, chapterId: string): Promise<ChapterDetails> {
+        const newsId = mangaId.split("-")[0];
+
         const request = App.createRequest({
-            url: `${DOMAIN}/reader/${mangaId.split("-")[0]}/${chapterId}`,
-            method: 'GET',
+            url: `${DOMAIN}/engine/ajax/controller.php?mod=api&action=reader/getChapterData`,
+            method: 'POST',
+            headers: { "content-type": "application/x-www-form-urlencoded" },
+            data: `news_id=${newsId}&chapter_id=${chapterId}`,
         })
 
         const response = await this.requestManager.schedule(request, 1)
-        const $ = cheerio.load(response.data as string)
 
-        const pages: string[] = [];
-
-        const scriptData = $("script")
-            .filter((_, el) => $(el).html()?.includes("__DATA__") ?? false)
-            .first()
-            .html();
-
-        if (scriptData) {
-            const jsonMatch = scriptData.match(/window\.__DATA__\s*=\s*({[\s\S]*?})\s*;/);
-            if (jsonMatch?.[1]) {
-                try {
-                    const data = JSON.parse(jsonMatch[1]);
-                    if (data.images && Array.isArray(data.images)) {
-                        pages.push(...data.images.map((img: string) => img.replace(/\\\//g, "/")));
-                    }
-                } catch (error) {
-                    console.error("Failed to parse JSON:", error);
-                }
-            }
-        }
+        const parsed = JSON.parse(response.data as string) as {
+            success?: boolean;
+            data?: { images?: string[] };
+        };
+        const pages = (parsed.data?.images ?? []).map(normalizeImageUrl);
 
         return App.createChapterDetails({
             id: chapterId,
@@ -492,4 +480,10 @@ export class BatCave
     }
 
     getMangaShareUrl(mangaId: string): string { return `${DOMAIN}/${mangaId}.html` }
+}
+
+function normalizeImageUrl(raw: string): string {
+    const url = raw.replace(/\\\//g, "/").trim();
+    if (url.startsWith("http")) return url;
+    return url.startsWith("/") ? `${DOMAIN}${url}` : `${DOMAIN}/${url}`;
 }
