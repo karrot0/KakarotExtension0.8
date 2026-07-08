@@ -15000,7 +15000,7 @@ var _Sources = (() => {
   // src/BatCave/BatCave.ts
   var DOMAIN2 = "https://batcave.biz";
   var BatCaveInfo = {
-    version: "0.0.8",
+    version: "0.0.9",
     name: "BatCave",
     description: `Extension that pulls manga from ${DOMAIN2}`,
     author: "Karrot",
@@ -15286,27 +15286,16 @@ var _Sources = (() => {
       return chapters;
     }
     async getChapterDetails(mangaId, chapterId) {
+      const newsId = mangaId.split("-")[0];
       const request = App.createRequest({
-        url: `${DOMAIN2}/reader/${mangaId.split("-")[0]}/${chapterId}`,
-        method: "GET"
+        url: `${DOMAIN2}/engine/ajax/controller.php?mod=api&action=reader/getChapterData`,
+        method: "POST",
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        data: `news_id=${newsId}&chapter_id=${chapterId}`
       });
       const response = await this.requestManager.schedule(request, 1);
-      const $2 = load(response.data);
-      const pages = [];
-      const scriptData = $2("script").filter((_, el) => $2(el).html()?.includes("__DATA__") ?? false).first().html();
-      if (scriptData) {
-        const jsonMatch = scriptData.match(/window\.__DATA__\s*=\s*({[\s\S]*?})\s*;/);
-        if (jsonMatch?.[1]) {
-          try {
-            const data2 = JSON.parse(jsonMatch[1]);
-            if (data2.images && Array.isArray(data2.images)) {
-              pages.push(...data2.images.map((img) => img.replace(/\\\//g, "/")));
-            }
-          } catch (error) {
-            console.error("Failed to parse JSON:", error);
-          }
-        }
-      }
+      const parsed = JSON.parse(response.data);
+      const pages = (parsed.data?.images ?? []).map(normalizeImageUrl);
       return App.createChapterDetails({
         id: chapterId,
         mangaId,
@@ -15328,6 +15317,11 @@ var _Sources = (() => {
       return `${DOMAIN2}/${mangaId}.html`;
     }
   };
+  function normalizeImageUrl(raw) {
+    const url = raw.replace(/\\\//g, "/").trim();
+    if (url.startsWith("http")) return url;
+    return url.startsWith("/") ? `${DOMAIN2}${url}` : `${DOMAIN2}/${url}`;
+  }
   return __toCommonJS(BatCave_exports);
 })();
 this.Sources = _Sources; if (typeof exports === 'object' && typeof module !== 'undefined') {module.exports.Sources = this.Sources;}
