@@ -62,7 +62,7 @@ export const AtsumaruInfo: SourceInfo = {
   version: "1.0.0",
   name: "Atsumaru",
   description: `Extension that pulls content from ${DOMAIN}`,
-  author: "Karrot",
+  author: "Lucifer's Circle",
   icon: "icon.png",
   contentRating: ContentRating.EVERYONE,
   websiteBaseURL: DOMAIN,
@@ -76,12 +76,11 @@ export const AtsumaruInfo: SourceInfo = {
 
 export class Atsumaru
   implements
-    ChapterProviding,
-    HomePageSectionsProviding,
-    MangaProviding,
-    SearchResultsProviding,
-    CloudflareBypassRequestProviding
-{
+  ChapterProviding,
+  HomePageSectionsProviding,
+  MangaProviding,
+  SearchResultsProviding,
+  CloudflareBypassRequestProviding {
   stateManager = App.createSourceStateManager();
 
   requestManager = App.createRequestManager({
