@@ -751,7 +751,7 @@ var _Sources = (() => {
     version: "1.0.0",
     name: "Atsumaru",
     description: `Extension that pulls content from ${DOMAIN}`,
-    author: "Karrot",
+    author: "Lucifer's Circle",
     icon: "icon.png",
     contentRating: import_types.ContentRating.EVERYONE,
     websiteBaseURL: DOMAIN,
